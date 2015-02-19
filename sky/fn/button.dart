@@ -34,6 +34,7 @@ class Button extends Component {
 
   Node render() {
     return new Container(
+      key: 'buttonContainer',
       children: [content],
       style: _depressed ? depressedStyle : style,
       onClick: handleClick

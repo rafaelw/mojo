@@ -21,7 +21,8 @@ class MyApp extends Component {
         (val) => new Text("Number: $val", key: val)).toList());
 
     return new Container(
-      children: [new Container(children: children)],
+      key: "appContainer",
+      children: [new Container(children: children, key: 'numbersContainer')],
       style: new Style('font-size: 20px; color: red')
     );
   }

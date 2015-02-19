@@ -14,7 +14,7 @@ void parentInsertBefore(sky.ParentNode parent,
   if (ref != null) {
     ref.insertBefore([node]);
   } else {
-    parent.prependChild(node);
+    parent.appendChild(node);
   }
 }
 
@@ -192,7 +192,6 @@ class Container extends Node {
 
     for (currentKey in _children.keys) {
       currentNode = _children[currentKey];
-
       if (currentKey == oldKey) {
         assert(currentNode.runtimeType == oldNode.runtimeType);
         nextSibling = nextSibling.nextSibling;
@@ -223,7 +222,10 @@ class Container extends Node {
 abstract class Component extends Node {
   // bool _dirty = false;
   Node _rendered = null;
-  bool _stateful = false;
+
+  // TODO(rafaelw): For now, treat all components as stateful so that we
+  // don't have to proxy event handlers.
+  bool _stateful = true;
 
   Component({ Object key }) : super(key:key);
 
@@ -239,11 +241,9 @@ abstract class Component extends Node {
       return false;  // Component reused in a new components rendered (e.g. was provided as an argument).
     }
 
-
-  // TODO(rafaelw): For now, treat components as stateful so that we
-  // don't have to proxy event handlers.
-    if (oldComponent != null) { // && oldComponent._stateful) {
-//      assert(!_stateful);
+    if (oldComponent != null && oldComponent._stateful) {
+      _stateful = false; // TODO(rafaelw): Remove. See above.
+      assert(!_stateful);
       oldComponent._copyPublicFields(this);
       this._rendered = oldComponent._rendered;
       oldComponent._rendered = null;
@@ -283,9 +283,5 @@ initialize(sky.Document document) {
 }
 
 render(sky.Node host, Component root) {
-  var st = new Stopwatch();
-  st.start();
   root._sync(null, host, null);
-  st.stop();
-  print(st.elapsedMilliseconds);
 }
