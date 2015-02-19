@@ -1,0 +1,12 @@
+#!mojo mojo:sky_viewer
+<sky>
+<div id="app" />
+<script>
+import 'main.dart';
+
+main() {
+  go();
+}
+
+</script>
+</sky>
