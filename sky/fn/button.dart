@@ -25,7 +25,7 @@ var depressedStyle = new Style('''
 class Button extends Component {
   // Configuration
   Node content;
-  EventHandler onClick;
+  sky.EventListener onClick;
 
   // Private
   bool _depressed = false;

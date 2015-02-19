@@ -8,6 +8,14 @@ import 'dart:collection';
  * 1) Components must return a single, non-component Node as their root
  */
 
+void parentInsertBefore(sky.ParentNode parent, sky.Node node, sky.Node ref) {
+  if (ref != null) {
+    ref.insertBefore([node]);
+  } else {
+    parent.prependChild(node);
+  }
+}
+
 class Style {
   final String _className;
   static Map<String, Style> _cache = null;
@@ -25,8 +33,8 @@ class Style {
     nextStyleId++;
 
     var styleNode = document.createElement('style');
-    styleNode.append(new sky.Text(".$className { $styles }"));
-    document.querySelector('body').append(styleNode);
+    styleNode.setChild(new sky.Text(".$className { $styles }"));
+    document.querySelector('body').appendChild(styleNode);
 
     return className;
   }
@@ -57,7 +65,7 @@ abstract class Node {
   }
 
   // Return true IFF the old node has *become* the new node (should be retained because it is stateful)
-  bool _sync(Node old, sky.Node host, sky.Node insertBefore);
+  bool _sync(Node old, sky.ParentNode host, sky.Node insertBefore);
 }
 
 class Text extends Node {
@@ -65,10 +73,10 @@ class Text extends Node {
 
   Text(this.data, { Object key }) : super(key:key);
 
-  bool _sync(Node old, sky.Node host, sky.Node insertBefore) {
+  bool _sync(Node old, sky.ParentNode host, sky.Node insertBefore) {
     if (old == null) {
       _root = new sky.Text(data);
-      host.insertBefore(_root, insertBefore);
+      parentInsertBefore(host, _root, insertBefore);
       return false;
     }
 
@@ -80,10 +88,8 @@ class Text extends Node {
   }
 }
 
-typedef void EventHandler(sky.Event e);
-
 class Container extends Node {
-  EventHandler onClick;
+  sky.EventListener onClick;
 
   LinkedHashMap<String, Node> _children = null;
   String className = '';
@@ -108,7 +114,7 @@ class Container extends Node {
     }
   }
 
-  bool _sync(Node old, sky.Node host, sky.Node insertBefore) {
+  bool _sync(Node old, sky.ParentNode host, sky.Node insertBefore) {
     if (old == null) {
       _root = sky.document.createElement('div');
       sky.Element root = _root as sky.Element;
@@ -118,7 +124,7 @@ class Container extends Node {
         // TODO(rafaelw): requires cleanup.
         // TODO(rafaelw): consider event delegation.
         // TODO(rafaelw): reduce the boilerplate that this requires.
-        root.onClick.listen(onClick);
+        root.addEventListener('click', onClick);
       }
 
       for (var key in _children.keys) {
@@ -126,23 +132,25 @@ class Container extends Node {
         child._sync(null, _root, null);
       }
 
-      host.insertBefore(_root, insertBefore);
+      parentInsertBefore(host, _root, insertBefore);
       return false;
     }
 
     _root = old._root;
     old._root = null;
-    sky.Element root = _root;
-    if ((old as Container).className != className)
+    sky.Element root = (_root as sky.Element);
+    if ((old as Container).className != className) {
       root.setAttribute('class', className);
-    if ((old as Container).onClick != onClick)
-      root.onClick.listen(onClick); // TODO(rafaelw): Cleanup old listener
+    }
+    if ((old as Container).onClick != onClick) {
+      root.addEventListener('click', onClick); // TODO(rafaelw): Cleanup old listener
+    }
 
     // Note: rendering anew is like syncing to a Node that how zero previous children.
     LinkedHashMap<String, Node> oldChildren = (old as Container)._children;
     Iterator<String> oldKeys = oldChildren.keys.iterator;
 
-    sky.Node nextSibling = _root.firstChild;
+    sky.Node nextSibling = root.firstChild;
     Node currentNode = null;
     String currentKey = null;
     Node oldNode = null;
@@ -167,7 +175,7 @@ class Container extends Node {
     advanceOldPointer();
 
     void sync() {
-      if (currentNode._sync(oldNode, _root, nextSibling)) {
+      if (currentNode._sync(oldNode, root, nextSibling)) {
         // oldNode was stateful and must be retained.
         _children[currentKey] = oldNode;
         oldChildren[currentKey] = null;
@@ -179,7 +187,7 @@ class Container extends Node {
 
       if (currentKey == oldKey) {
         assert(currentNode.runtimeType == oldNode.runtimeType);
-        nextSibling = nextSibling.nextNode;
+        nextSibling = nextSibling.nextSibling;
         sync();
         advanceOldPointer();
         continue;
@@ -189,10 +197,10 @@ class Container extends Node {
       if (oldNode != null) {
         // Re-order of existing node.
         oldChildren[currentKey] = null;
-        _root.insertBefore(oldNode._root, nextSibling);
+        parentInsertBefore(root, oldNode._root, nextSibling);
       }
 
-      currentNode._sync(oldNode, _root, nextSibling);
+      currentNode._sync(oldNode, root, nextSibling);
     }
 
     while (advanceOldPointer()) {
@@ -205,7 +213,7 @@ class Container extends Node {
 }
 
 abstract class Component extends Node {
-  bool _dirty = false;
+  // bool _dirty = false;
   Node _rendered = null;
   bool _stateful = false;
 
@@ -252,7 +260,7 @@ abstract class Component extends Node {
     // TODO(rafaelw): Enter into a queue of tree-depth-ordered, pending work and batch all dirties until the end of microtask.
     _stateful = true;
     fn();
-    _rerender(_rendered, _rendered._root.parentNode, _rendered._root.nextNode);
+    _rerender(_rendered, _rendered._root.parentNode, _rendered._root.nextSibling);
   }
 
   Node render();

@@ -41,7 +41,7 @@ class MyApp extends Component {
   }
 }
 
-main() {
+go() {
   initialize(document);
   var d = new MyApp();
   render(document.getElementById("app"), d);
