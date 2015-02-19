@@ -34,7 +34,7 @@ class Button extends Component {
 
   Node render() {
     return new Container(
-      key: 'buttonContainer',
+      key: 'Button',
       children: [content],
       style: _depressed ? depressedStyle : style,
       onClick: handleClick
@@ -42,7 +42,6 @@ class Button extends Component {
   }
 
   void handleClick(sky.Event e) {
-
     setState(() { _depressed = !_depressed; });
     onClick(e);
   }

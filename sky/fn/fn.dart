@@ -2,6 +2,7 @@ library fn;
 
 import 'dart:sky' as sky;
 import 'dart:collection';
+import 'dart:async';
 
 /*
  * Simplifying assumptions (for now)
@@ -23,20 +24,15 @@ class Style {
   static Map<String, Style> _cache = null;
 
   static int nextStyleId = 1;
-  static sky.Document document = null;
-
-  static void _initializeStyleCache(sky.Document doc) {
-    document = doc;
-  }
 
   static String nextClassName(String styles) {
-    assert(document != null);
+    assert(sky.document != null);
     var className = "style$nextStyleId";
     nextStyleId++;
 
-    var styleNode = document.createElement('style');
+    var styleNode = sky.document.createElement('style');
     styleNode.setChild(new sky.Text(".$className { $styles }"));
-    document.querySelector('#app').appendChild(styleNode);
+    sky.document.appendChild(styleNode);
 
     return className;
   }
@@ -278,10 +274,14 @@ abstract class Component extends Node {
   Node render();
 }
 
-initialize(sky.Document document) {
-  Style._initializeStyleCache(document);
-}
+abstract class App extends Component {
+  sky.Node _host = null;
+  App() : super(key:'App') {
+    _host = sky.document.createElement('div');
+    sky.document.appendChild(_host);
 
-render(sky.Node host, Component root) {
-  root._sync(null, host, null);
+    new Future.microtask(() {
+      _sync(null, _host, null);
+    });
+  }
 }

@@ -1,15 +1,15 @@
 // Copyright (c) 2015, <your name>. All rights reserved. Use of this source code
 // is governed by a BSD-style license that can be found in the LICENSE file.
-
-import 'dart:sky' show document;
 import 'fn.dart';
 import 'button.dart';
 
-class MyApp extends Component {
+class MyApp extends App {
   List<int> _numbers = [];
   int _counter = 0;
 
-  MyApp() : super() {}
+  MyApp() : super() {
+
+  }
 
   Node render() {
     var children = [new Button(
@@ -21,8 +21,8 @@ class MyApp extends Component {
         (val) => new Text("Number: $val", key: val)).toList());
 
     return new Container(
-      key: "appContainer",
-      children: [new Container(children: children, key: 'numbersContainer')],
+      key: "MyApp",
+      children: [new Container(children: children, key: 'Numbers')],
       style: new Style('font-size: 20px; color: red')
     );
   }
@@ -32,10 +32,4 @@ class MyApp extends Component {
       _numbers.add(_counter++);
     });
   }
-}
-
-go() {
-  initialize(document);
-  var d = new MyApp();
-  render(document.getElementById("app"), d);
 }
