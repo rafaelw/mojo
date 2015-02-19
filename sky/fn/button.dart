@@ -29,13 +29,12 @@ class Button extends Component {
 
   // Private
   bool _depressed = false;
-  int _count = 0;
 
   Button({ Object key, this.content, this.onClick }) : super(key:key);
 
   Node render() {
     return new Container(
-      children: [new Text("$_count")],
+      children: [content],
       style: _depressed ? depressedStyle : style,
       onClick: handleClick
     );
@@ -43,7 +42,7 @@ class Button extends Component {
 
   void handleClick(sky.Event e) {
 
-    setState(() { _depressed = !_depressed; _count++; });
+    setState(() { _depressed = !_depressed; });
     onClick(e);
   }
 }

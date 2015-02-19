@@ -8,7 +8,9 @@ import 'dart:collection';
  * 1) Components must return a single, non-component Node as their root
  */
 
-void parentInsertBefore(sky.ParentNode parent, sky.Node node, sky.Node ref) {
+void parentInsertBefore(sky.ParentNode parent,
+                                    sky.Node node,
+                                    sky.Node ref) {
   if (ref != null) {
     ref.insertBefore([node]);
   } else {
@@ -34,7 +36,7 @@ class Style {
 
     var styleNode = document.createElement('style');
     styleNode.setChild(new sky.Text(".$className { $styles }"));
-    document.querySelector('body').appendChild(styleNode);
+    document.querySelector('#app').appendChild(styleNode);
 
     return className;
   }
@@ -64,7 +66,8 @@ abstract class Node {
     _key = "$runtimeType-$key";
   }
 
-  // Return true IFF the old node has *become* the new node (should be retained because it is stateful)
+  // Return true IFF the old node has *become* the new node (should be
+  // retained because it is stateful)
   bool _sync(Node old, sky.ParentNode host, sky.Node insertBefore);
 }
 
@@ -91,6 +94,8 @@ class Text extends Node {
 class Container extends Node {
   sky.EventListener onClick;
 
+  // TODO(make children an Iterable and keep a seperate HashMap of
+  // key->Node.
   LinkedHashMap<String, Node> _children = null;
   String className = '';
 
@@ -110,7 +115,8 @@ class Container extends Node {
     for (var child in children) {
       bool didPut = false;
       _children.putIfAbsent(child._key, () { didPut = true; return child; });
-      assert(didPut); // No two children of the same type can have the same key.
+      // No two children of the same type can have the same key.
+      assert(didPut);
     }
   }
 
@@ -143,10 +149,12 @@ class Container extends Node {
       root.setAttribute('class', className);
     }
     if ((old as Container).onClick != onClick) {
-      root.addEventListener('click', onClick); // TODO(rafaelw): Cleanup old listener
+      // TODO(rafaelw): Cleanup old listener
+      root.addEventListener('click', onClick);
     }
 
-    // Note: rendering anew is like syncing to a Node that how zero previous children.
+    // Note: rendering anew is like syncing to a Node that how zero
+    // previous children.
     LinkedHashMap<String, Node> oldChildren = (old as Container)._children;
     Iterator<String> oldKeys = oldChildren.keys.iterator;
 
@@ -231,8 +239,11 @@ abstract class Component extends Node {
       return false;  // Component reused in a new components rendered (e.g. was provided as an argument).
     }
 
-    if (oldComponent != null && oldComponent._stateful) {
-      assert(!_stateful);
+
+  // TODO(rafaelw): For now, treat components as stateful so that we
+  // don't have to proxy event handlers.
+    if (oldComponent != null) { // && oldComponent._stateful) {
+//      assert(!_stateful);
       oldComponent._copyPublicFields(this);
       this._rendered = oldComponent._rendered;
       oldComponent._rendered = null;
@@ -252,15 +263,16 @@ abstract class Component extends Node {
   }
 
   void _copyPublicFields(Component other) {
-    // Not implemented.
-    assert(false);
+    // TODO(rafaelw): Not implemented.
   }
 
   void setState(Function fn()) {
-    // TODO(rafaelw): Enter into a queue of tree-depth-ordered, pending work and batch all dirties until the end of microtask.
+    // TODO(rafaelw): Enter into a queue of tree-depth-ordered, pending
+    // work and batch all dirties until the end of microtask.
     _stateful = true;
     fn();
-    _rerender(_rendered, _rendered._root.parentNode, _rendered._root.nextSibling);
+    _rerender(_rendered, _rendered._root.parentNode,
+                   _rendered._root.nextSibling);
   }
 
   Node render();

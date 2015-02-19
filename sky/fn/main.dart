@@ -6,38 +6,30 @@ import 'fn.dart';
 import 'button.dart';
 
 class MyApp extends Component {
-  List<int> numbers = null;
+  List<int> _numbers = [];
+  int _counter = 0;
 
   MyApp() : super() {}
 
   Node render() {
-    return new Button(
-      content: new Text('Click Me!'),
+    var children = [new Button(
+      content: new Text('Add one'),
       onClick: clicked
-    );
-  }
-  /*
-  Node render() {
+    )];
+
+    children.addAll(_numbers.map(
+        (val) => new Text("Number: $val", key: val)).toList());
+
     return new Container(
-      children: [
-        new Container(
-          children: [
-            new Text('bar 7', key: 1),
-            new Text('bar 9', key: 2),
-            new Button(
-              content: new Text('I am a button'),
-              onClick: clicked
-            )
-          ],
-          style: new Style('font-size: 20px; color: red')
-        )
-      ]
+      children: [new Container(children: children)],
+      style: new Style('font-size: 20px; color: red')
     );
   }
-  */
 
   void clicked(e) {
-    print('yay!');
+    setState(() {
+      _numbers.add(_counter++);
+    });
   }
 }
 
