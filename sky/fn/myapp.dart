@@ -17,7 +17,7 @@ class MyApp extends App {
       content: new Text('Add one'),
       onClick: clicked
     )]..addAll(
-      _numbers.map((val) => new Item(key: val, label: "Number: $val"))
+      _numbers.map((val) => new Item(key: val, label: "$val of $_counter:"))
     );
 
     return new Container(
