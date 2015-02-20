@@ -222,6 +222,7 @@ List<Component> _dirtyComponents = new List<Component>();
 bool _renderScheduled = false;
 
 void _renderDirtyComponents() {
+  Stopwatch sw = new Stopwatch()..start();
   _dirtyComponents.sort((a, b) => a._order - b._order);
   for (var comp in _dirtyComponents) {
     comp._renderIfDirty();
@@ -229,6 +230,8 @@ void _renderDirtyComponents() {
 
   _dirtyComponents.clear();
   _renderScheduled = false;
+  sw.stop();
+  print("Render took ${sw.elapsedMicroseconds} microseconds");
 }
 
 void _scheduleComponentForRender(Component c) {
