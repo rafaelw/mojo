@@ -388,18 +388,25 @@ abstract class Component extends Node {
 
     _dirty = false;
 
-    assert(_rendered is! Component);
     // TODO(rafaelw): This prevents components from returing different node
     // types as their root node at different times. Consider relaxing.
     assert(oldRendered == null ||
            _rendered.runtimeType == oldRendered.runtimeType);
-    _rendered._sync(oldRendered, host, insertBefore);
+
+    if (_rendered._sync(oldRendered, host, insertBefore)) {
+      _rendered = oldRendered; // retain stateful component
+    }
   }
 
   void _renderIfDirty() {
     assert(_rendered != null);
-    _renderInternal(_rendered._root.parentNode,
-                           _rendered._root.nextSibling);
+    var rendered = _rendered;
+    while (rendered is Component) {
+      rendered = rendered._rendered;
+    }
+    sky.Node root = rendered._root;
+
+    _renderInternal(root.parentNode, root.nextSibling);
   }
 
   void setState(Function fn()) {

@@ -2,7 +2,7 @@ library item;
 
 import 'dart:sky' as sky;
 import 'fn.dart';
-import 'button.dart';
+import 'widgets.dart';
 
 class Item extends Component {
   String label;
