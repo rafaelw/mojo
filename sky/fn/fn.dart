@@ -215,46 +215,89 @@ class Container extends Node {
   }
 }
 
+List<Component> _dirtyComponents = new List<Component>();
+bool _renderScheduled = false;
+
+void _renderDirtyComponents() {
+  _dirtyComponents.sort((a, b) => a._order - b._order);
+  for (var comp in _dirtyComponents) {
+    comp._renderIfDirty();
+  }
+
+  _dirtyComponents.clear();
+  _renderScheduled = false;
+}
+
+void _scheduleComponentForRender(Component c) {
+  _dirtyComponents.add(c);
+
+  if (!_renderScheduled) {
+    _renderScheduled = true;
+    new Future.microtask(_renderDirtyComponents);
+  }
+}
+
 abstract class Component extends Node {
-  // bool _dirty = false;
+  bool _dirty = true;
   Node _rendered = null;
+  int _order;
+  static int _currentOrder = 0;
 
   // TODO(rafaelw): For now, treat all components as stateful so that we
   // don't have to proxy event handlers.
   bool _stateful = true;
 
-  Component({ Object key }) : super(key:key);
+  Component({ Object key })
+      : _order = _currentOrder + 1,
+        super(key:key) {
+  }
 
   bool _sync(Node old, sky.Node host, sky.Node insertBefore) {
-    if (old == null) {
-      _rendered = render();
-      _rendered._sync(null, host, insertBefore);
-      return false; // new rendering
-    }
-
     Component oldComponent = old as Component;
-    if (oldComponent == this) {
-      return false;  // Component reused in a new components rendered (e.g. was provided as an argument).
+
+    if (oldComponent == null || oldComponent == this) {
+      _renderInternal(host, insertBefore);
+      return false;
     }
 
-    if (oldComponent != null && oldComponent._stateful) {
-      _stateful = false; // TODO(rafaelw): Remove. See above.
-      assert(!_stateful);
+    assert(oldComponent != null);
+    assert(_dirty);
+    assert(_rendered == null);
+
+    if (oldComponent._stateful) {
+      // assert(!_stateful); // TODO(rafaelw): Remove. See above.
       oldComponent._copyPublicFields(this);
-      this._rendered = oldComponent._rendered;
-      oldComponent._rendered = null;
-      oldComponent._sync(this, host, insertBefore);
+      oldComponent._dirty = true;
+
+      _dirty = false;
+      _stateful = false;
+
+      oldComponent._renderInternal(host, insertBefore);
       return true;  // Must retain old component
     }
 
-    _rerender(oldComponent._rendered, host, insertBefore);
+    _rendered = oldComponent._rendered;
+    _renderInternal(host, insertBefore);
     return false;
   }
 
-  void _rerender(Node oldRendered, sky.Node host, sky.Node insertBefore) {
+  void _renderInternal(sky.Node host, sky.Node insertBefore) {
+    if (!_dirty) {
+      assert(_rendered != null);
+      return;
+    }
+
+    var oldRendered = _rendered;
+    int lastOrder = _currentOrder;
+    _currentOrder = _order;
     _rendered = render();
+    _currentOrder = lastOrder;
+
+    _dirty = false;
+
     assert(_rendered is! Component);
-    assert(_rendered.runtimeType == oldRendered.runtimeType);
+    assert(oldRendered == null ||
+              _rendered.runtimeType == oldRendered.runtimeType);
     _rendered._sync(oldRendered, host, insertBefore);
   }
 
@@ -262,13 +305,19 @@ abstract class Component extends Node {
     // TODO(rafaelw): Not implemented.
   }
 
+  void _renderIfDirty() {
+    assert(_rendered != null);
+    _renderInternal(_rendered._root.parentNode,
+                           _rendered._root.nextSibling);
+  }
+
   void setState(Function fn()) {
+    _dirty = true;
     // TODO(rafaelw): Enter into a queue of tree-depth-ordered, pending
     // work and batch all dirties until the end of microtask.
     _stateful = true;
     fn();
-    _rerender(_rendered, _rendered._root.parentNode,
-                   _rendered._root.nextSibling);
+    _scheduleComponentForRender(this);
   }
 
   Node render();
