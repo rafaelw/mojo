@@ -1,7 +1,9 @@
+library button;
+
 import 'fn.dart';
 import 'dart:sky' as sky;
 
-var style = new Style('''
+var _style = new Style('''
   display: inline-flex;
   border-radius: 4px;
   justify-content: center;
@@ -11,7 +13,7 @@ var style = new Style('''
   margin: 5px;
 ''');
 
-var depressedStyle = new Style('''
+var _depressedStyle = new Style('''
   display: inline-flex;
   border-radius: 4px;
   justify-content: center;
@@ -36,7 +38,7 @@ class Button extends Component {
     return new Container(
       key: 'Button',
       children: [content],
-      style: _depressed ? depressedStyle : style,
+      style: _depressed ? _depressedStyle : _style,
       onClick: handleClick
     );
   }

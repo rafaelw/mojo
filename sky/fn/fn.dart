@@ -10,9 +10,11 @@ import 'reflect.dart' as reflect;
  * 1) Components must return a single, non-component Node as their root
  */
 
+bool _g_enableDevMode = false;
+
 void parentInsertBefore(sky.ParentNode parent,
-                                    sky.Node node,
-                                    sky.Node ref) {
+                        sky.Node node,
+                        sky.Node ref) {
   if (ref != null) {
     ref.insertBefore([node]);
   } else {
@@ -71,7 +73,11 @@ abstract class Node {
 class Text extends Node {
   String data;
 
-  Text(this.data, { Object key }) : super(key:key);
+  // Text nodes are special cases of having non-unique keys (which don't need
+  // to be assigned as part of the API). Since they are unique in not having
+  // children, there's little point to reordering, so we always just re-assign
+  // the data.
+  Text(this.data) : super(key:'*text*');
 
   bool _sync(Node old, sky.ParentNode host, sky.Node insertBefore) {
     if (old == null) {
@@ -88,42 +94,50 @@ class Text extends Node {
   }
 }
 
+var _emptyList = new List<Node>();
+
 class Container extends Node {
   sky.EventListener onClick;
 
-  // TODO(make children an Iterable and keep a seperate HashMap of
-  // key->Node.
-  LinkedHashMap<String, Node> _children = null;
-  String className = '';
+
+  List<Node> _children = null;
+  String _className = '';
 
   Container({
       Object key,
-      Iterable<Node> children,
+      List<Node> children,
       Style style,
       this.onClick}) : super(key:key) {
 
-    if (style != null)
-      className = style._className;
+    _className = style == null ? '': style._className;
+    _children = children == null ? _emptyList : children;
 
-    if (children == null)
-      return;
+    if (_g_enableDevMode) {
+      _debugReportDuplicateIds();
+    }
+  }
 
-    _children = new LinkedHashMap<String, Node>();
-    for (var child in children) {
+  void _debugReportDuplicateIds() {
+    var idMap = new HashMap<String, Node>();
+    for (var child in _children) {
+      if (child is Text) {
+        continue; // Text nodes all have the same key and are never reordered.
+      }
+
       bool didPut = false;
-      _children.putIfAbsent(child._key, () { didPut = true; return child; });
+      idMap.putIfAbsent(child._key, () { didPut = true; return child; });
       // No two children of the same type can have the same key.
       assert(didPut);
     }
   }
 
-  // TODO(rafaelw): Special case Text to not need key and just copy data
-  // TODO(rafaelw): Use back & front pointers to walk inward.
   bool _sync(Node old, sky.ParentNode host, sky.Node insertBefore) {
-    if (old == null) {
+    Container oldContainer = old as Container;
+
+    if (oldContainer == null) {
       _root = sky.document.createElement('div');
       sky.Element root = _root as sky.Element;
-      root.setAttribute('class', className);
+      root.setAttribute('class', _className);
 
       if (onClick != null) {
         // TODO(rafaelw): requires cleanup.
@@ -132,8 +146,7 @@ class Container extends Node {
         root.addEventListener('click', onClick);
       }
 
-      for (var key in _children.keys) {
-        var child = _children[key];
+      for (var child in _children) {
         child._sync(null, _root, null);
       }
 
@@ -141,83 +154,138 @@ class Container extends Node {
       return false;
     }
 
-    _root = old._root;
-    old._root = null;
+    _root = oldContainer._root;
+    oldContainer._root = null;
     sky.Element root = (_root as sky.Element);
-    if ((old as Container).className != className) {
-      root.setAttribute('class', className);
+
+    if (oldContainer._className != _className) {
+      root.setAttribute('class', _className);
     }
-    if ((old as Container).onClick != onClick) {
+    if (oldContainer.onClick != onClick) {
       // TODO(rafaelw): Cleanup old listener
       root.addEventListener('click', onClick);
     }
 
-    // Note: rendering anew is like syncing to a Node that how zero
-    // previous children.
-    LinkedHashMap<String, Node> oldChildren = (old as Container)._children;
-    Iterator<String> oldKeys = oldChildren.keys.iterator;
+    var startIndex = 0;
+    var endIndex = _children.length;
 
-    sky.Node nextSibling = root.firstChild;
+    var oldChildren = oldContainer._children;
+    var oldStartIndex = 0;
+    var oldEndIndex = oldChildren.length;
+
+    sky.Node nextSibling = null;
     Node currentNode = null;
-    String currentKey = null;
     Node oldNode = null;
-    String oldKey = null;
 
-    // Skips over null positions being created by moving items from later
-    // in the collection.
-    bool advanceOldPointer() {
-      if (!oldKeys.moveNext()) {
-        oldNode = null;
-        oldKey = null;
-        return false;
-      }
-
-      oldKey = oldKeys.current;
-      oldNode = oldChildren[oldKey];
-      if (oldNode == null)
-        return advanceOldPointer();
-
-      return true;
-    }
-    advanceOldPointer();
-
-    void sync() {
+    void sync(int atIndex) {
       if (currentNode._sync(oldNode, root, nextSibling)) {
         // oldNode was stateful and must be retained.
-        _children[currentKey] = oldNode;
-        oldChildren[currentKey] = null;
+        assert(oldNode != null);
+        _children[atIndex] = oldNode;
       }
     }
 
-    for (currentKey in _children.keys) {
-      currentNode = _children[currentKey];
-      if (currentKey == oldKey) {
+    // Scan backwards from end of list while nodes can be directly synced
+    // without reordering.
+    while (endIndex > startIndex && oldEndIndex > oldStartIndex) {
+      currentNode = _children[endIndex - 1];
+      oldNode = oldChildren[oldEndIndex - 1];
+
+      if (currentNode._key != oldNode._key) {
+        break;
+      }
+
+      endIndex--;
+      oldEndIndex--;
+      sync(endIndex);
+      nextSibling = currentNode._root;
+    }
+
+    HashMap<String, Node> oldNodeIdMap = null;
+
+    bool oldNodeReordered(String key) {
+      return oldNodeIdMap != null &&
+             oldNodeIdMap.containsKey(key) &&
+             oldNodeIdMap[key] == null;
+    }
+
+    void advanceOldStartIndex() {
+      oldStartIndex++;
+      while (oldStartIndex < oldEndIndex &&
+             oldNodeReordered(oldChildren[oldStartIndex]._key)) {
+        oldStartIndex++;
+      }
+    }
+
+    void ensureOldIdMap() {
+      oldNodeIdMap = new HashMap<String, Node>();
+      for (int i = oldStartIndex; i < oldEndIndex; i++) {
+        var node = oldChildren[i];
+        if (node is! Text) {
+          oldNodeIdMap.putIfAbsent(node._key, () => node);
+        }
+      }
+    }
+
+    void searchForOldNode() {
+      if (currentNode is Text)
+        return; // Never re-order Text nodes.
+
+      ensureOldIdMap();
+      oldNode = oldNodeIdMap[currentNode._key];
+      if (oldNode == null)
+        return;
+
+      oldNodeIdMap[currentNode._key] = null; // mark it reordered.
+      parentInsertBefore(root, oldNode._root, nextSibling);
+    }
+
+    // Scan forwards, this time we may re-order;
+    nextSibling = root.firstChild;
+    while (startIndex < endIndex && oldStartIndex < oldEndIndex) {
+      currentNode = _children[startIndex];
+      oldNode = oldChildren[oldStartIndex];
+
+      if (currentNode._key == oldNode._key) {
         assert(currentNode.runtimeType == oldNode.runtimeType);
         nextSibling = nextSibling.nextSibling;
-        sync();
-        advanceOldPointer();
+        sync(startIndex);
+        startIndex++;
+        advanceOldStartIndex();
         continue;
       }
 
-      oldNode = oldChildren[currentKey];
-      if (oldNode != null) {
-        // Re-order of existing node.
-        oldChildren[currentKey] = null;
-        parentInsertBefore(root, oldNode._root, nextSibling);
-      }
-
-      currentNode._sync(oldNode, root, nextSibling);
+      oldNode = null;
+      searchForOldNode();
+      sync(startIndex);
+      startIndex++;
     }
 
-    while (advanceOldPointer()) {
-      oldNode._root.remove();
+    // New insertions
+    oldNode = null;
+    while (startIndex < endIndex) {
+      currentNode = _children[startIndex];
+      sync(startIndex);
+      startIndex++;
+    }
+
+    // Removals
+    currentNode = null;
+    while (oldStartIndex < oldEndIndex) {
+      oldNode = oldChildren[oldStartIndex];
       // TODO(rafaelw): oldNode._unmount();
+      oldNode._root.remove();
+      advanceOldStartIndex();
     }
 
+    oldContainer._children = null;
     return false;
   }
 }
 
+
+// TODO(rafaelw): Make all of the rescheduleDirty stuff class-statics on
+// Component.
 List<Component> _dirtyComponents = new List<Component>();
 bool _renderScheduled = false;
 
@@ -302,8 +370,10 @@ abstract class Component extends Node {
     _dirty = false;
 
     assert(_rendered is! Component);
+    // TODO(rafaelw): This prevents components from returing different node
+    // types as their root node at different times. Consider relaxing.
     assert(oldRendered == null ||
-              _rendered.runtimeType == oldRendered.runtimeType);
+           _rendered.runtimeType == oldRendered.runtimeType);
     _rendered._sync(oldRendered, host, insertBefore);
   }
 
@@ -327,7 +397,10 @@ abstract class Component extends Node {
 
 abstract class App extends Component {
   sky.Node _host = null;
-  App() : super(key:'App') {
+  App({ bool devMode : false })
+    : super(key:'App') {
+
+    _g_enableDevMode = devMode;
     _host = sky.document.createElement('div');
     sky.document.appendChild(_host);
 
