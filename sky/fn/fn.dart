@@ -332,7 +332,10 @@ abstract class App extends Component {
     sky.document.appendChild(_host);
 
     new Future.microtask(() {
+      Stopwatch sw = new Stopwatch()..start();
       _sync(null, _host, null);
+      sw.stop();
+      print("Initial render: ${sw.elapsedMicroseconds}");
     });
   }
 }
