@@ -2,6 +2,7 @@
 // is governed by a BSD-style license that can be found in the LICENSE file.
 import 'fn.dart';
 import 'button.dart';
+import 'item.dart';
 
 class MyApp extends App {
   List<int> _numbers = [];
@@ -15,10 +16,9 @@ class MyApp extends App {
     var children = [new Button(
       content: new Text('Add one'),
       onClick: clicked
-    )];
-
-    children.addAll(_numbers.map(
-        (val) => new Text("Number: $val", key: val)).toList());
+    )]..addAll(
+      _numbers.map((val) => new Item(key: val, label: "Number: $val"))
+    );
 
     return new Container(
       key: "MyApp",
