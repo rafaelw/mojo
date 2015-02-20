@@ -3,6 +3,7 @@ library fn;
 import 'dart:sky' as sky;
 import 'dart:collection';
 import 'dart:async';
+import 'reflect.dart' as reflect;
 
 /*
  * Simplifying assumptions (for now)
@@ -116,6 +117,8 @@ class Container extends Node {
     }
   }
 
+  // TODO(rafaelw): Special case Text to not need key and just copy data
+  // TODO(rafaelw): Use back & front pointers to walk inward.
   bool _sync(Node old, sky.ParentNode host, sky.Node insertBefore) {
     if (old == null) {
       _root = sky.document.createElement('div');
@@ -266,7 +269,7 @@ abstract class Component extends Node {
 
     if (oldComponent._stateful) {
       // assert(!_stateful); // TODO(rafaelw): Remove. See above.
-      oldComponent._copyPublicFields(this);
+      reflect.copyPublicFields(this, oldComponent);
       oldComponent._dirty = true;
 
       _dirty = false;
@@ -299,10 +302,6 @@ abstract class Component extends Node {
     assert(oldRendered == null ||
               _rendered.runtimeType == oldRendered.runtimeType);
     _rendered._sync(oldRendered, host, insertBefore);
-  }
-
-  void _copyPublicFields(Component other) {
-    // TODO(rafaelw): Not implemented.
   }
 
   void _renderIfDirty() {
