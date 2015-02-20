@@ -309,6 +309,7 @@ bool _renderScheduled = false;
 
 void _renderDirtyComponents() {
   Stopwatch sw = new Stopwatch()..start();
+
   _dirtyComponents.sort((a, b) => a._order - b._order);
   for (var comp in _dirtyComponents) {
     comp._renderIfDirty();
@@ -426,7 +427,7 @@ abstract class App extends Component {
       Stopwatch sw = new Stopwatch()..start();
       _sync(null, _host, null);
       sw.stop();
-      print("Initial render: ${sw.elapsedMicroseconds}");
+      print("Initial render: ${sw.elapsedMicroseconds} microseconds");
     });
   }
 }
