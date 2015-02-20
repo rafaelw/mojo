@@ -132,9 +132,13 @@ class Container extends Node {
   }
 
   bool _sync(Node old, sky.ParentNode host, sky.Node insertBefore) {
+    // print("---Syncing children of $_key");
+
     Container oldContainer = old as Container;
 
     if (oldContainer == null) {
+      // print("...no oldContainer, initial render");
+
       _root = sky.document.createElement('div');
       sky.Element root = _root as sky.Element;
       root.setAttribute('class', _className);
@@ -187,6 +191,7 @@ class Container extends Node {
 
     // Scan backwards from end of list while nodes can be directly synced
     // without reordering.
+    // print("...scanning backwards");
     while (endIndex > startIndex && oldEndIndex > oldStartIndex) {
       currentNode = _children[endIndex - 1];
       oldNode = oldChildren[oldEndIndex - 1];
@@ -195,6 +200,7 @@ class Container extends Node {
         break;
       }
 
+      // print('> syncing matched at: $endIndex : $oldEndIndex');
       endIndex--;
       oldEndIndex--;
       sync(endIndex);
@@ -227,26 +233,29 @@ class Container extends Node {
       }
     }
 
-    void searchForOldNode() {
+    bool searchForOldNode() {
       if (currentNode is Text)
-        return; // Never re-order Text nodes.
+        return false; // Never re-order Text nodes.
 
       ensureOldIdMap();
       oldNode = oldNodeIdMap[currentNode._key];
       if (oldNode == null)
-        return;
+        return false;
 
       oldNodeIdMap[currentNode._key] = null; // mark it reordered.
       parentInsertBefore(root, oldNode._root, nextSibling);
+      return true;
     }
 
     // Scan forwards, this time we may re-order;
+    // print("...scanning forward");
     nextSibling = root.firstChild;
     while (startIndex < endIndex && oldStartIndex < oldEndIndex) {
       currentNode = _children[startIndex];
       oldNode = oldChildren[oldStartIndex];
 
       if (currentNode._key == oldNode._key) {
+        // print('> syncing matched at: $startIndex : $oldStartIndex');
         assert(currentNode.runtimeType == oldNode.runtimeType);
         nextSibling = nextSibling.nextSibling;
         sync(startIndex);
@@ -256,22 +265,31 @@ class Container extends Node {
       }
 
       oldNode = null;
-      searchForOldNode();
+      if (searchForOldNode()) {
+        // print('> reordered to $startIndex');
+      } else {
+        // print('> inserting at $startIndex');
+      }
+
       sync(startIndex);
       startIndex++;
     }
 
     // New insertions
     oldNode = null;
+    // print('...processing remaining insertions');
     while (startIndex < endIndex) {
+      // print('> inserting at $startIndex');
       currentNode = _children[startIndex];
       sync(startIndex);
       startIndex++;
     }
 
     // Removals
+    // print('...processing remaining removals');
     currentNode = null;
     while (oldStartIndex < oldEndIndex) {
+      // print('> removing from $oldEndIndex');
       oldNode = oldChildren[oldStartIndex];
       // TODO(rafaelw): oldNode._unmount();
       oldNode._root.remove();
