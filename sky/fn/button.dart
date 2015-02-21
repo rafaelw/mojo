@@ -1,6 +1,6 @@
 part of widgets;
 
-class Button extends Component {
+class Button extends ButtonBase {
 
   static Style _style = new Style('''
     display: inline-flex;
@@ -12,7 +12,7 @@ class Button extends Component {
     margin: 5px;'''
   );
 
-  static Style _depressedStyle = new Style('''
+  static Style _highlightStyle = new Style('''
     display: inline-flex;
     border-radius: 4px;
     justify-content: center;
@@ -26,35 +26,17 @@ class Button extends Component {
   Node content;
   sky.EventListener onClick;
 
-  bool _depressed = false;
-
   Button({ Object key, this.content, this.onClick }) : super(key:key);
 
   Node render() {
     return new Container(
       key: 'Button',
-      style: _depressed ? _depressedStyle : _style,
+      style: _highlight ? _highlightStyle : _style,
       onClick: onClick,
       onPointerDown: _handlePointerDown,
       onPointerUp: _handlePointerUp,
       onPointerCancel: _handlePointerCancel,
       children: [content]
     );
-  }
-
-  void _handlePointerDown(sky.Event e) {
-    setState(() {
-      _depressed = true;
-    });
-  }
-  void _handlePointerUp(sky.Event e) {
-    setState(() {
-      _depressed = false;
-    });
-  }
-  void _handlePointerCancel(sky.Event e) {
-    setState(() {
-      _depressed = false;
-    });
   }
 }
