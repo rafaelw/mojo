@@ -95,19 +95,28 @@ class Text extends Node {
 }
 
 var _emptyList = new List<Node>();
+var _emptyContainer = new Container();
 
 class Container extends Node {
   sky.EventListener onClick;
-
+  sky.EventListener onPointerDown;
+  sky.EventListener onPointerUp;
+  sky.EventListener onPointerCancel;
 
   List<Node> _children = null;
   String _className = '';
 
   Container({
-      Object key,
-      List<Node> children,
-      Style style,
-      this.onClick}) : super(key:key) {
+    Object key,
+    List<Node> children,
+    Style style,
+
+    // Events
+    this.onClick,
+    this.onPointerDown,
+    this.onPointerUp,
+    this.onPointerCancel
+  }) : super(key:key) {
 
     _className = style == null ? '': style._className;
     _children = children == null ? _emptyList : children;
@@ -131,6 +140,32 @@ class Container extends Node {
     }
   }
 
+  void _syncEvent(String eventName, sky.EventListener listener,
+                  sky.EventListener oldListener) {
+    sky.Element root = _root as sky.Element;
+    if (listener == oldListener)
+      return;
+
+    if (oldListener != null) {
+      root.removeEventListener(eventName, oldListener);
+    }
+
+    if (listener != null) {
+      root.addEventListener(eventName, listener);
+    }
+  }
+
+  void _syncEvents([Container old]) {
+    if (old == null) {
+      old = _emptyContainer;
+    }
+
+    _syncEvent('click', onClick, old.onClick);
+    _syncEvent('pointerdown', onPointerDown, old.onPointerDown);
+    _syncEvent('pointerup', onPointerUp, old.onPointerUp);
+    _syncEvent('pointercancel', onPointerCancel, old.onPointerCancel);
+  }
+
   bool _sync(Node old, sky.ParentNode host, sky.Node insertBefore) {
     // print("---Syncing children of $_key");
 
@@ -143,12 +178,7 @@ class Container extends Node {
       sky.Element root = _root as sky.Element;
       root.setAttribute('class', _className);
 
-      if (onClick != null) {
-        // TODO(rafaelw): requires cleanup.
-        // TODO(rafaelw): consider event delegation.
-        // TODO(rafaelw): reduce the boilerplate that this requires.
-        root.addEventListener('click', onClick);
-      }
+      _syncEvents();
 
       for (var child in _children) {
         child._sync(null, _root, null);
@@ -162,12 +192,10 @@ class Container extends Node {
     oldContainer._root = null;
     sky.Element root = (_root as sky.Element);
 
+    _syncEvents(oldContainer);
+
     if (oldContainer._className != _className) {
       root.setAttribute('class', _className);
-    }
-    if (oldContainer.onClick != onClick) {
-      // TODO(rafaelw): Cleanup old listener
-      root.addEventListener('click', onClick);
     }
 
     var startIndex = 0;

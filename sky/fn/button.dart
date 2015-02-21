@@ -34,13 +34,27 @@ class Button extends Component {
     return new Container(
       key: 'Button',
       style: _depressed ? _depressedStyle : _style,
-      onClick: handleClick,
+      onClick: onClick,
+      onPointerDown: _handlePointerDown,
+      onPointerUp: _handlePointerUp,
+      onPointerCancel: _handlePointerCancel,
       children: [content]
     );
   }
 
-  void handleClick(sky.Event e) {
-    setState(() { _depressed = !_depressed; });
-    onClick(e);
+  void _handlePointerDown(sky.Event e) {
+    setState(() {
+      _depressed = true;
+    });
+  }
+  void _handlePointerUp(sky.Event e) {
+    setState(() {
+      _depressed = false;
+    });
+  }
+  void _handlePointerCancel(sky.Event e) {
+    setState(() {
+      _depressed = false;
+    });
   }
 }
