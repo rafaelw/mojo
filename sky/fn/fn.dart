@@ -5,12 +5,7 @@ import 'dart:collection';
 import 'dart:async';
 import 'reflect.dart' as reflect;
 
-/*
- * Simplifying assumptions (for now)
- * 1) Components must return a single, non-component Node as their root
- */
-
-bool _g_enableDevMode = false;
+bool _debugCheckingEnabled = false;
 
 void parentInsertBefore(sky.ParentNode parent,
                         sky.Node node,
@@ -121,7 +116,7 @@ class Container extends Node {
     _className = style == null ? '': style._className;
     _children = children == null ? _emptyList : children;
 
-    if (_g_enableDevMode) {
+    if (_debugCheckingEnabled) {
       _debugReportDuplicateIds();
     }
   }
@@ -319,7 +314,6 @@ class Container extends Node {
     while (oldStartIndex < oldEndIndex) {
       // print('> removing from $oldEndIndex');
       oldNode = oldChildren[oldStartIndex];
-      // TODO(rafaelw): oldNode._unmount();
       oldNode._root.remove();
       advanceOldStartIndex();
     }
@@ -329,9 +323,6 @@ class Container extends Node {
   }
 }
 
-
-// TODO(rafaelw): Make all of the rescheduleDirty stuff class-statics on
-// Component.
 List<Component> _dirtyComponents = new List<Component>();
 bool _renderScheduled = false;
 
@@ -413,7 +404,7 @@ abstract class Component extends Node {
 
     _dirty = false;
 
-    // TODO(rafaelw): This prevents components from returing different node
+    // TODO(rafaelw): This prevents components from returning different node
     // types as their root node at different times. Consider relaxing.
     assert(oldRendered == null ||
            _rendered.runtimeType == oldRendered.runtimeType);
@@ -436,8 +427,6 @@ abstract class Component extends Node {
 
   void setState(Function fn()) {
     _dirty = true;
-    // TODO(rafaelw): Enter into a queue of tree-depth-ordered, pending
-    // work and batch all dirties until the end of microtask.
     _stateful = true;
     fn();
     _scheduleComponentForRender(this);
@@ -451,7 +440,7 @@ abstract class App extends Component {
   App({ bool devMode : false })
     : super(key:'App') {
 
-    _g_enableDevMode = devMode;
+    _debugCheckingEnabled = devMode;
     _host = sky.document.createElement('div');
     sky.document.appendChild(_host);
 
