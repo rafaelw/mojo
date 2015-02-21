@@ -359,14 +359,11 @@ void _scheduleComponentForRender(Component c) {
 }
 
 abstract class Component extends Node {
-  bool _dirty = true;
+  bool _dirty = true; // components begin dirty because they haven't rendered.
   Node _rendered = null;
   int _order;
   static int _currentOrder = 0;
-
-  // TODO(rafaelw): For now, treat all components as stateful so that we
-  // don't have to proxy event handlers.
-  bool _stateful = true;
+  bool _stateful = false;
 
   Component({ Object key })
       : _order = _currentOrder + 1,
@@ -386,12 +383,12 @@ abstract class Component extends Node {
     assert(_rendered == null);
 
     if (oldComponent._stateful) {
-      // assert(!_stateful); // TODO(rafaelw): Remove. See above.
-      reflect.copyPublicFields(this, oldComponent);
-      oldComponent._dirty = true;
+      assert(!_stateful);
 
+      reflect.copyPublicFields(this, oldComponent);
+
+      oldComponent._dirty = true;
       _dirty = false;
-      _stateful = false;
 
       oldComponent._renderInternal(host, insertBefore);
       return true;  // Must retain old component
