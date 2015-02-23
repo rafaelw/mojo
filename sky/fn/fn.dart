@@ -97,9 +97,11 @@ class Container extends Node {
   sky.EventListener onPointerDown;
   sky.EventListener onPointerUp;
   sky.EventListener onPointerCancel;
+  sky.EventListener onScrollStart;
   sky.EventListener onScrollUpdate;
+  sky.EventListener onScrollEnd;
   sky.EventListener onFlingStart;
-  sky.EventListener onFlingUpdate;
+  sky.EventListener onFlingCancel;
   sky.EventListener onWheel;
 
   List<Node> _children = null;
@@ -114,7 +116,13 @@ class Container extends Node {
     this.onClick,
     this.onPointerDown,
     this.onPointerUp,
-    this.onPointerCancel
+    this.onPointerCancel,
+    this.onScrollStart,
+    this.onScrollUpdate,
+    this.onScrollEnd,
+    this.onFlingStart,
+    this.onFlingCancel,
+    this.onWheel
   }) : super(key:key) {
 
     _className = style == null ? '': style._className;
@@ -163,9 +171,11 @@ class Container extends Node {
     _syncEvent('pointerdown', onPointerDown, old.onPointerDown);
     _syncEvent('pointerup', onPointerUp, old.onPointerUp);
     _syncEvent('pointercancel', onPointerCancel, old.onPointerCancel);
-    _syncEvent('scrollupdate', onScrollUpdate, old.onScrollUpdate);
-    _syncEvent('flingstart', onFlingStart, old.onFlingStart);
-    _syncEvent('flingcancel', onFlingCancel, old.onFlingCancel);
+    _syncEvent('gesturescrollstart', onScrollStart, old.onScrollStart);
+    _syncEvent('gesturescrollupdate', onScrollUpdate, old.onScrollUpdate);
+    _syncEvent('gesturescrollend', onScrollEnd, old.onScrollEnd);
+    _syncEvent('gestureflingstart', onFlingStart, old.onFlingStart);
+    _syncEvent('gestureflingcancel', onFlingCancel, old.onFlingCancel);
     _syncEvent('wheel', onWheel, old.onWheel);
   }
 
@@ -255,6 +265,9 @@ class Container extends Node {
     }
 
     void ensureOldIdMap() {
+      if (oldNodeIdMap != null)
+        return;
+
       oldNodeIdMap = new HashMap<String, Node>();
       for (int i = oldStartIndex; i < oldEndIndex; i++) {
         var node = oldChildren[i];
@@ -320,8 +333,8 @@ class Container extends Node {
     // print('...processing remaining removals');
     currentNode = null;
     while (oldStartIndex < oldEndIndex) {
-      // print('> removing from $oldEndIndex');
       oldNode = oldChildren[oldStartIndex];
+      // print('> ${oldNode._key} removing from $oldEndIndex');
       oldNode._root.remove();
       advanceOldStartIndex();
     }
