@@ -97,6 +97,10 @@ class Container extends Node {
   sky.EventListener onPointerDown;
   sky.EventListener onPointerUp;
   sky.EventListener onPointerCancel;
+  sky.EventListener onScrollUpdate;
+  sky.EventListener onFlingStart;
+  sky.EventListener onFlingUpdate;
+  sky.EventListener onWheel;
 
   List<Node> _children = null;
   String _className = '';
@@ -159,6 +163,10 @@ class Container extends Node {
     _syncEvent('pointerdown', onPointerDown, old.onPointerDown);
     _syncEvent('pointerup', onPointerUp, old.onPointerUp);
     _syncEvent('pointercancel', onPointerCancel, old.onPointerCancel);
+    _syncEvent('scrollupdate', onScrollUpdate, old.onScrollUpdate);
+    _syncEvent('flingstart', onFlingStart, old.onFlingStart);
+    _syncEvent('flingcancel', onFlingCancel, old.onFlingCancel);
+    _syncEvent('wheel', onWheel, old.onWheel);
   }
 
   bool _sync(Node old, sky.ParentNode host, sky.Node insertBefore) {

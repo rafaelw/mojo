@@ -8,7 +8,6 @@ abstract class Scrollable extends Component {
 
   Scrollable({ Object key }) : super(key:key);
 
-
   bool _scrollBy(int scrollDelta) {
     _scrollOffset += scrollDelta;
     return scrollDelta != 0;
@@ -34,7 +33,6 @@ abstract class Scrollable extends Component {
       return _stopFling();
     _scheduleFlingUpdate();
   }
-
 
   void _handleScrollUpdate(sky.Event e) {
     _scrollBy(e.dy);

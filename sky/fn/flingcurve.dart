@@ -1,46 +1,47 @@
-part of widgets;
+part widgets;
 
-const double kDefaultAlpha = -5707.62;
-const int kDefaultBeta = 172;
-const double kDefaultGamma = 3.7;
+const double _kDefaultAlpha = -5707.62;
+const double _kDefaultBeta = 172.0;
+const double _kDefaultGamma = 3.7;
 
 double _positionAtTime(double t) {
-  return kDefaultAlpha * Math.exp(-kDefaultGamma * t) - kDefaultBeta * t - kDefaultAlpha;
+  return kDefaultAlpha * math.exp(-kDefaultGamma * t) - kDefaultBeta * t - kDefaultAlpha;
 }
 
-function velocityAtTime(t) {
-  return -kDefaultAlpha * kDefaultGamma * Math.exp(-kDefaultGamma * t) - kDefaultBeta;
+double _velocityAtTime(double t) {
+  return -kDefaultAlpha * kDefaultGamma * math.exp(-kDefaultGamma * t) - kDefaultBeta;
 }
 
-function timeAtVelocity(v) {
-  return -Math.log((v + kDefaultBeta) / (-kDefaultAlpha * kDefaultGamma)) / kDefaultGamma;
+double _timeAtVelocity(double v) {
+  return -math.log((v + kDefaultBeta) / (-kDefaultAlpha * kDefaultGamma)) / kDefaultGamma;
 }
 
-var kMaxVelocity = velocityAtTime(0);
-var kCurveDuration = timeAtVelocity(0);
+final double _kMaxVelocity = _velocityAtTime(0.0);
+final double _kCurveDuration = _timeAtVelocity(0.0);
 
 class FlingCurve {
-  int _velocity;
-  int startTime;
+  double _timeOffset;
+  double _positionOffset;
+  double _startTime;
+  double _previousPosition;
+  double _direction;
 
-  FlingCurve(velocity, startTime) {
-    var startingVelocity = Math.min(kMaxVelocity, Math.abs(velocity));
-    this.timeOffset_ = timeAtVelocity(startingVelocity);
-    this.positionOffset_ = _positionAtTime(this.timeOffset_);
-    this.startTime_ = startTime / 1000;
-    this.previousPosition_ = 0;
-    this.direction_ = Math.sign(velocity);
-    Object.preventExtensions(this);
+  FlingCurve(double velocity, double startTime) {
+    double startingVelocity = math.min(_kMaxVelocity, velocity.abs());
+    _timeOffset = _velocityAtTime(startingVelocity);
+    _positionOffset = _positionAtTime(_timeOffset);
+    _startTime = startTime / 1000.0;
+    _previousPosition = 0.0;
+    _direction = velocity.sign;
   }
 
-  update(timeStamp) {
-    var t = timeStamp / 1000 - this.startTime_ + this.timeOffset_;
-    if (t >= kCurveDuration)
-      return 0;
-    var position = _positionAtTime(t) - this.positionOffset_;
-    var positionDelta = position - this.previousPosition_;
-    this.previousPosition_ = position;
-    return this.direction_ * Math.max(0, positionDelta);
+  double update(double timeStamp) {
+    double t = timeStamp / 1000.0 - _startTime + _timeOffset;
+    if (t >= _kCurveDuration)
+      return 0.0;
+    double position = _positionAtTime(t) - _positionOffset;
+    double positionDelta = position - _previousPosition;
+    _previousPosition = position;
+    return _direction * math.max(0.0, positionDelta);
   }
 }
-

@@ -2,6 +2,7 @@ library widgets;
 
 import 'fn.dart';
 import 'dart:sky' as sky;
+import "dart:math" as math;
 
 part 'box.dart';
 part 'button.dart';
