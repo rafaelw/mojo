@@ -2,6 +2,8 @@
 <sky>
 <script>
 import 'myapp.dart';
-main() { new MyApp(); }
+main() {
+  new MyApp();
+}
 </script>
 </sky>

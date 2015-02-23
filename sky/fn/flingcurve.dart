@@ -1,19 +1,27 @@
-part widgets;
+part of widgets;
+
+// Copyright 2015 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 const double _kDefaultAlpha = -5707.62;
 const double _kDefaultBeta = 172.0;
 const double _kDefaultGamma = 3.7;
 
 double _positionAtTime(double t) {
-  return kDefaultAlpha * math.exp(-kDefaultGamma * t) - kDefaultBeta * t - kDefaultAlpha;
+  return _kDefaultAlpha * math.exp(-_kDefaultGamma * t)
+      - _kDefaultBeta * t
+      - _kDefaultAlpha;
 }
 
 double _velocityAtTime(double t) {
-  return -kDefaultAlpha * kDefaultGamma * math.exp(-kDefaultGamma * t) - kDefaultBeta;
+  return -_kDefaultAlpha * _kDefaultGamma * math.exp(-_kDefaultGamma * t)
+      - _kDefaultBeta;
 }
 
 double _timeAtVelocity(double v) {
-  return -math.log((v + kDefaultBeta) / (-kDefaultAlpha * kDefaultGamma)) / kDefaultGamma;
+  return -math.log((v + _kDefaultBeta) / (-_kDefaultAlpha * _kDefaultGamma))
+      / _kDefaultGamma;
 }
 
 final double _kMaxVelocity = _velocityAtTime(0.0);

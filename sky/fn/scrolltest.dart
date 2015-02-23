@@ -1,51 +1,55 @@
-import 'dart:sky' as sky;
 import 'fn.dart';
 import 'widgets.dart';
 
-class ScrollTest extends Scrollable {
+class ScrollTest extends Component {
 
   String label;
 
-  Color _color = Color.GREEN;
+  ScrollTracker _scrollTracker;
+  double _scrollOffset = 0.0;
 
-  Item({ Object key, this.label }) : super(key:key);
+  ScrollTest({ Object key, this.label }) : super(key:key) {
+    _scrollTracker = new ScrollTracker(_scrollChanged);
+  }
 
   Node render() {
     int itemHeight = 25;
-    int displayHeight = 680;
-    int drawCount = math.abs(displayHeight / itemHeight) + 2;
-    int alignmentDelta = - _scrollOffset % itemHeight - itemHeight;
-    int drawStart = _scrollOffset - alignmentDelta;
+    int displayHeight = 800;
+    int drawCount = (displayHeight / itemHeight).round();
+    double alignmentDelta = - _scrollOffset % itemHeight - itemHeight;
+    double drawStart = _scrollOffset + alignmentDelta;
 
-    int itemNumber = drawStart / itemHeight;
+    int itemNumber = (drawStart / itemHeight).floor();
+
+    // print('drawCount: $drawCount');
+    // print('_scrollOffset: $_scrollOffset');
+    // print('alignmentDelta: $alignmentDelta');
+
+    // print('drawStart: $drawStart');
+    // print('startItem: $itemNumber');
+
     var items = [];
     for (var i = 0; i < drawCount; i++) {
       items.add(new Container(
         key: itemNumber,
-        children: new Text("Item $itemNumber")
+        children: [new Text("Thinger $itemNumber")]
       ));
       itemNumber++;
     }
 
     return new Container(
       key: 'ScrollTest',
-      onFlingStart: _handleFlingStart,
-      onFlingCancel: _handleFlingCancel,
-      onScrollUpdate: _handleScrollUpdate,
-      onWheel: _handleWheel,
-      children: [
-        new Container(
-          key: ScrollArea,
-
-          children: items
-        )
-      ]
+      onFlingStart: _scrollTracker.handleFlingStart,
+      onFlingCancel: _scrollTracker.handleFlingCancel,
+      onScrollUpdate: _scrollTracker.handleScrollUpdate,
+      onWheel: _scrollTracker.handleWheel,
+      children: items
     );
   }
 
-  void changed(Object value) {
+  _scrollChanged(double newOffset) {
     setState(() {
-      _color = value;
+      _scrollOffset = newOffset;
     });
   }
 }
