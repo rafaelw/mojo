@@ -21,13 +21,6 @@ class ScrollTest extends Component {
 
     int itemNumber = (drawStart / itemHeight).floor();
 
-    // print('drawCount: $drawCount');
-    // print('_scrollOffset: $_scrollOffset');
-    // print('alignmentDelta: $alignmentDelta');
-
-    // print('drawStart: $drawStart');
-    // print('startItem: $itemNumber');
-
     var items = [];
     for (var i = 0; i < drawCount; i++) {
       items.add(new Container(
