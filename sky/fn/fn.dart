@@ -299,6 +299,7 @@ class Container extends Node {
         return false;
 
       oldNodeIdMap[currentNode._key] = null; // mark it reordered.
+      // print("Reparenting ${currentNode._key}");
       parentInsertBefore(root, oldNode._root, nextSibling);
       return true;
     }
@@ -393,6 +394,18 @@ abstract class Component extends Node {
       : _order = _currentOrder + 1,
         _stateful = stateful != null ? stateful : false,
         super(key:key);
+
+  // TODO(rafaelw): This is kind of hacky. Components don't really have 
+  // _root.
+  sky.Node get _root => _findRoot();
+  sky.Node _findRoot() {
+    var node = _rendered;
+    while (_rendered !=null && _rendered is Component) {
+      _rendered = _rendered._rendered;
+    }
+
+    return node == null ? null : node._root;
+  }
 
   bool _sync(Node old, sky.Node host, sky.Node insertBefore) {
     Component oldComponent = old as Component;
