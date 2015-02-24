@@ -93,6 +93,9 @@ var _emptyList = new List<Node>();
 var _emptyContainer = new Container();
 
 class Container extends Node {
+
+  String inlineStyle;
+
   sky.EventListener onClick;
   sky.EventListener onPointerDown;
   sky.EventListener onPointerUp;
@@ -111,6 +114,8 @@ class Container extends Node {
     Object key,
     List<Node> children,
     Style style,
+
+    this.inlineStyle,
 
     // Events
     this.onClick,
@@ -163,10 +168,6 @@ class Container extends Node {
   }
 
   void _syncEvents([Container old]) {
-    if (old == null) {
-      old = _emptyContainer;
-    }
-
     _syncEvent('click', onClick, old.onClick);
     _syncEvent('pointerdown', onPointerDown, old.onPointerDown);
     _syncEvent('pointerup', onPointerUp, old.onPointerUp);
@@ -179,6 +180,24 @@ class Container extends Node {
     _syncEvent('wheel', onWheel, old.onWheel);
   }
 
+  void _syncNode([Container old]) {
+    if (old == null) {
+      old = _emptyContainer;
+    }
+
+    sky.Element root = _root as sky.Element;
+
+    if (_className != old._className) {
+      root.setAttribute('class', _className);
+    }
+
+    if (inlineStyle != old.inlineStyle) {
+      root.setAttribute('style', inlineStyle);
+    }
+
+    _syncEvents(old);
+  }
+
   bool _sync(Node old, sky.ParentNode host, sky.Node insertBefore) {
     // print("---Syncing children of $_key");
 
@@ -188,10 +207,7 @@ class Container extends Node {
       // print("...no oldContainer, initial render");
 
       _root = sky.document.createElement('div');
-      sky.Element root = _root as sky.Element;
-      root.setAttribute('class', _className);
-
-      _syncEvents();
+      _syncNode();
 
       for (var child in _children) {
         child._sync(null, _root, null);
@@ -205,11 +221,7 @@ class Container extends Node {
     oldContainer._root = null;
     sky.Element root = (_root as sky.Element);
 
-    _syncEvents(oldContainer);
-
-    if (oldContainer._className != _className) {
-      root.setAttribute('class', _className);
-    }
+    _syncNode(oldContainer);
 
     var startIndex = 0;
     var endIndex = _children.length;
