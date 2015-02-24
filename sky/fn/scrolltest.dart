@@ -5,27 +5,18 @@ class ScrollTest extends Component {
 
   String label;
 
-  ScrollTracker _scrollTracker;
   double _scrollOffset = 0.0;
-
-  static Style _style = new Style('''
-    overflow: hidden;
-    position: relative;
-    will-change: transform;'''
-  );
 
   static Style _scrollAreaStyle = new Style('''
     position:relative;
-    will-change: transform;
-''');
+    will-change: transform;'''
+  );
 
   static Style _itemStyle = new Style('''
     height: 22px;'''
   );
 
-  ScrollTest({ Object key, this.label }) : super(key:key) {
-    _scrollTracker = new ScrollTracker(_scrollChanged);
-  }
+  ScrollTest({ Object key, this.label }) : super(key:key);
 
   Node render() {
     int itemHeight = 22;
@@ -49,15 +40,13 @@ class ScrollTest extends Component {
     var transformStyle =
         'transform: translateY(${(alignmentDelta).toStringAsFixed(2)}px)';
 
-    return new Container(
+    return new Scroller(
       key: 'ScrollTest',
-      style: _style,
-      onFlingStart: _scrollTracker.handleFlingStart,
-      onFlingCancel: _scrollTracker.handleFlingCancel,
-      onScrollUpdate: _scrollTracker.handleScrollUpdate,
-      onWheel: _scrollTracker.handleWheel,
+      scrollOffset: _scrollOffset,
+      scrollChanged: _scrollChanged,
       children: [
         new Container(
+          style: _scrollAreaStyle,
           inlineStyle: transformStyle,
           key: 'ScrollArea',
           children: items

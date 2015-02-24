@@ -387,12 +387,12 @@ abstract class Component extends Node {
   Node _rendered = null;
   int _order;
   static int _currentOrder = 0;
-  bool _stateful = false;
+  bool _stateful;
 
-  Component({ Object key })
+  Component({ Object key, bool stateful })
       : _order = _currentOrder + 1,
-        super(key:key) {
-  }
+        _stateful = stateful != null ? stateful : false,
+        super(key:key);
 
   bool _sync(Node old, sky.Node host, sky.Node insertBefore) {
     Component oldComponent = old as Component;
@@ -407,7 +407,7 @@ abstract class Component extends Node {
     assert(_rendered == null);
 
     if (oldComponent._stateful) {
-      assert(!_stateful);
+      _stateful = false; // prevent ilooping.
 
       reflect.copyPublicFields(this, oldComponent);
 
