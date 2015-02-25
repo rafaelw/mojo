@@ -245,7 +245,8 @@ class Container extends Node {
       if (currentNode._sync(oldNode, root, nextSibling)) {
         // oldNode was stateful and must be retained.
         assert(oldNode != null);
-        _children[atIndex] = oldNode;
+        currentNode = oldNode;
+        _children[atIndex] = currentNode;
       }
       assert(currentNode._root is sky.Node);
     }
@@ -396,13 +397,13 @@ abstract class Component extends Node {
   Node _rendered = null;
   int _order;
   static int _currentOrder = 0;
-  bool _stateful = false;
+  bool _stateful;
 
-  Component({ Object key })
-      : _order = _currentOrder + 1,
+  Component({ Object key, bool stateful })
+      : _stateful = stateful != null ? stateful : false,
+        _order = _currentOrder + 1,
         super(key:key);
 
-  void willMount() {}
   void willUnmount() {}
 
   void _remove() {
@@ -413,6 +414,10 @@ abstract class Component extends Node {
     _rendered = null;
     _root = null;
   }
+
+  // TODO(rafaelw): It seems wrong to expose DOM at all. This is presently
+  // needed to get sizing info.
+  sky.Node getRoot() => _root;
 
   bool _sync(Node old, sky.Node host, sky.Node insertBefore) {
     Component oldComponent = old as Component;
@@ -427,7 +432,7 @@ abstract class Component extends Node {
     assert(_rendered == null);
 
     if (oldComponent._stateful) {
-      assert(!_stateful);
+      _stateful = false; // prevent iloop from _renderInternal below.
 
       reflect.copyPublicFields(this, oldComponent);
 
@@ -450,9 +455,6 @@ abstract class Component extends Node {
     }
 
     var oldRendered = _rendered;
-    if (oldRendered == null) {
-      willMount();
-    }
 
     int lastOrder = _currentOrder;
     _currentOrder = _order;
