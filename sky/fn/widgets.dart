@@ -11,5 +11,6 @@ part 'checkbox.dart';
 part 'flingcurve.dart';
 part 'radio.dart';
 part 'scroller.dart';
+part 'toolbar.dart';
 
 typedef void ValueChanged(value);
