@@ -404,6 +404,7 @@ abstract class Component extends Node {
         _order = _currentOrder + 1,
         super(key:key);
 
+  void didMount() {}
   void willUnmount() {}
 
   void _remove() {
@@ -455,7 +456,7 @@ abstract class Component extends Node {
     }
 
     var oldRendered = _rendered;
-
+    var firstRender = oldRendered == null;
     int lastOrder = _currentOrder;
     _currentOrder = _order;
     _rendered = render();
@@ -473,6 +474,9 @@ abstract class Component extends Node {
     }
     _root = _rendered._root;
     assert(_rendered._root is sky.Node);
+    if (firstRender) {
+      didMount();
+    }
   }
 
   void _renderIfDirty() {
