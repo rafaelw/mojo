@@ -395,7 +395,7 @@ abstract class Component extends Node {
         _stateful = stateful != null ? stateful : false,
         super(key:key);
 
-  // TODO(rafaelw): This is kind of hacky. Components don't really have 
+  // TODO(rafaelw): This is kind of hacky. Components don't really have
   // _root.
   sky.Node get _root => _findRoot();
   sky.Node _findRoot() {
