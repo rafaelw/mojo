@@ -63,6 +63,12 @@ abstract class Node {
   // Return true IFF the old node has *become* the new node (should be
   // retained because it is stateful)
   bool _sync(Node old, sky.ParentNode host, sky.Node insertBefore);
+
+  void _remove() {
+    assert(_root != null);
+    _root.remove();
+    _root = null;
+  }
 }
 
 class Text extends Node {
@@ -211,6 +217,7 @@ class Container extends Node {
 
       for (var child in _children) {
         child._sync(null, _root, null);
+        assert(child._root is sky.Node);
       }
 
       parentInsertBefore(host, _root, insertBefore);
@@ -240,6 +247,7 @@ class Container extends Node {
         assert(oldNode != null);
         _children[atIndex] = oldNode;
       }
+      assert(currentNode._root is sky.Node);
     }
 
     // Scan backwards from end of list while nodes can be directly synced
@@ -348,7 +356,7 @@ class Container extends Node {
     while (oldStartIndex < oldEndIndex) {
       oldNode = oldChildren[oldStartIndex];
       // print('> ${oldNode._key} removing from $oldEndIndex');
-      oldNode._root.remove();
+      oldNode._remove();
       advanceOldStartIndex();
     }
 
@@ -388,23 +396,22 @@ abstract class Component extends Node {
   Node _rendered = null;
   int _order;
   static int _currentOrder = 0;
-  bool _stateful;
+  bool _stateful = false;
 
-  Component({ Object key, bool stateful })
+  Component({ Object key })
       : _order = _currentOrder + 1,
-        _stateful = stateful != null ? stateful : false,
         super(key:key);
 
-  // TODO(rafaelw): This is kind of hacky. Components don't really have
-  // _root.
-  sky.Node get _root => _findRoot();
-  sky.Node _findRoot() {
-    var node = _rendered;
-    while (_rendered !=null && _rendered is Component) {
-      _rendered = _rendered._rendered;
-    }
+  void willMount() {}
+  void willUnmount() {}
 
-    return node == null ? null : node._root;
+  void _remove() {
+    assert(_rendered != null);
+    assert(_root != null);
+    willUnmount();
+    _rendered._remove();
+    _rendered = null;
+    _root = null;
   }
 
   bool _sync(Node old, sky.Node host, sky.Node insertBefore) {
@@ -420,7 +427,7 @@ abstract class Component extends Node {
     assert(_rendered == null);
 
     if (oldComponent._stateful) {
-      _stateful = false; // prevent ilooping.
+      assert(!_stateful);
 
       reflect.copyPublicFields(this, oldComponent);
 
@@ -443,6 +450,10 @@ abstract class Component extends Node {
     }
 
     var oldRendered = _rendered;
+    if (oldRendered == null) {
+      willMount();
+    }
+
     int lastOrder = _currentOrder;
     _currentOrder = _order;
     _rendered = render();
@@ -458,6 +469,8 @@ abstract class Component extends Node {
     if (_rendered._sync(oldRendered, host, insertBefore)) {
       _rendered = oldRendered; // retain stateful component
     }
+    _root = _rendered._root;
+    assert(_rendered._root is sky.Node);
   }
 
   void _renderIfDirty() {
@@ -472,6 +485,7 @@ abstract class Component extends Node {
   }
 
   void setState(Function fn()) {
+    assert(_rendered != null); // cannot setState before mounting.
     _dirty = true;
     _stateful = true;
     fn();
@@ -493,6 +507,7 @@ abstract class App extends Component {
     new Future.microtask(() {
       Stopwatch sw = new Stopwatch()..start();
       _sync(null, _host, null);
+      assert(_root is sky.Node);
       sw.stop();
       print("Initial render: ${sw.elapsedMicroseconds} microseconds");
     });

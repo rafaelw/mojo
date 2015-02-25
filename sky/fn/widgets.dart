@@ -10,7 +10,7 @@ part 'buttonbase.dart';
 part 'checkbox.dart';
 part 'flingcurve.dart';
 part 'radio.dart';
-part 'scroller.dart';
+part 'fixedheightscrollable.dart';
 part 'toolbar.dart';
 
 typedef void ValueChanged(value);
