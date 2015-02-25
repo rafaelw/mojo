@@ -10,7 +10,7 @@ class Stocklist extends FixedHeightScrollable {
   Stocklist(this.stocks)
     : super(
         key:'Stocklist',
-        itemHeight: 60.0,
+        itemHeight: 80.0,
         height: 800.0,
         minOffset: 0.0
       );
