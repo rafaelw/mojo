@@ -144,6 +144,17 @@ class Container extends Node {
     }
   }
 
+  void _remove() {
+    super._remove();
+    if (_children != null) {
+      for (var child in _children) {
+        child._remove();
+      }
+    }
+    _children = null;
+  }
+
+
   void _debugReportDuplicateIds() {
     var idMap = new HashMap<String, Node>();
     for (var child in _children) {
@@ -392,12 +403,15 @@ void _scheduleComponentForRender(Component c) {
   }
 }
 
+enum MountState { UNMOUNTED, MOUNTED, REMOVED }
+
 abstract class Component extends Node {
   bool _dirty = true; // components begin dirty because they haven't rendered.
   Node _rendered = null;
   int _order;
   static int _currentOrder = 0;
   bool _stateful;
+  MountState _mountState = MountState.UNMOUNTED;
 
   Component({ Object key, bool stateful })
       : _stateful = stateful != null ? stateful : false,
@@ -411,6 +425,7 @@ abstract class Component extends Node {
     assert(_rendered != null);
     assert(_root != null);
     willUnmount();
+    _mountState = MountState.REMOVED;
     _rendered._remove();
     _rendered = null;
     _root = null;
@@ -456,7 +471,6 @@ abstract class Component extends Node {
     }
 
     var oldRendered = _rendered;
-    var firstRender = oldRendered == null;
     int lastOrder = _currentOrder;
     _currentOrder = _order;
     _rendered = render();
@@ -474,7 +488,8 @@ abstract class Component extends Node {
     }
     _root = _rendered._root;
     assert(_rendered._root is sky.Node);
-    if (firstRender) {
+    if (_mountState == MountState.UNMOUNTED) {
+      _mountState = MountState.MOUNTED;
       didMount();
     }
   }
@@ -491,6 +506,11 @@ abstract class Component extends Node {
   }
 
   void setState(Function fn()) {
+    if (_mountState == MountState.REMOVED) {
+      return;
+    }
+
+    assert(_mountState == MountState.MOUNTED);
     assert(_rendered != null); // cannot setState before mounting.
     _dirty = true;
     _stateful = true;

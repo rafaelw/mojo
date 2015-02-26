@@ -1,27 +1,36 @@
 part of widgets;
 
+typedef StreamClosed(FrameGenerator);
+
 class FrameGenerator {
 
+  StreamClosed onDone;
   StreamController _controller;
 
   Stream<double> get onTick => _controller.stream;
 
   int _animationId = 0;
-  bool _closed = false;
+  bool _cancelled = false;
 
-  FrameGenerator() {
+  FrameGenerator({this.onDone}) {
     _controller = new StreamController(
       sync: true,
       onListen: _scheduleTick,
-      onCancel: close);
+      onCancel: cancel);
   }
 
-  void close() {
+  void cancel() {
+    if (_cancelled) {
+      return;
+    }
     if (_animationId != 0) {
       sky.window.cancelAnimationFrame(_animationId);
     }
     _animationId = 0;
-    _closed = true;
+    _cancelled = true;
+    if (onDone != null) {
+      onDone(this);
+    }
   }
 
   void _scheduleTick() {
@@ -32,13 +41,11 @@ class FrameGenerator {
   void _tick(double timeStamp) {
     _animationId = 0;
     _controller.add(timeStamp);
-    if (!_closed) {
+    if (!_cancelled) {
       _scheduleTick();
     }
   }
 }
-
-typedef AnimationDone(AnimationGenerator);
 
 class AnimationGenerator extends FrameGenerator {
 
@@ -47,15 +54,14 @@ class AnimationGenerator extends FrameGenerator {
   final double begin;
   final double end;
   final Curve curve;
-  final AnimationDone onDone;
   Stream<double> _stream;
 
   AnimationGenerator(this.duration, {
     this.begin: 0.0,
     this.end: 1.0,
     this.curve: linear,
-    this.onDone
-  }):super() {
+    StreamClosed onDone
+  }):super(onDone: onDone) {
     double startTime = 0.0;
     _stream = super.onTick.map((timeStamp) {
       if (startTime == 0.0) {

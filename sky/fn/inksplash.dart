@@ -12,7 +12,7 @@ class SplashAnimation extends AnimationGenerator {
   Stream<String> get onStyleChanged => _styleChanged;
 
   SplashAnimation(sky.ClientRect rect, double x, double y,
-                  { AnimationDone onDone })
+                  { StreamClosed onDone })
     : _offsetX = x - rect.left,
       _offsetY = y - rect.top,
       super(_kSplashDuration,
@@ -86,6 +86,6 @@ class InkSplash extends Component {
   }
 
   void willUnmount() {
-    animation.close();
+    animation.cancel();
   }
 }

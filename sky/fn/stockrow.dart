@@ -41,13 +41,6 @@ class StockRow extends Component {
     this.stock = stock;
   }
 
-  void willUnmount() {
-    if (_splashes != null) {
-      _splashes.forEach((splash) { splash.close(); });
-      _splashes = null;
-    }
-  }
-
   Node render() {
     String lastSale = "\$${stock.lastSale.toStringAsFixed(2)}";
 
@@ -76,7 +69,6 @@ class StockRow extends Component {
         children: [new Text(changeInPrice)]
       )
     ];
-
 
     if (_splashes != null) {
       children.addAll(_splashes.map((s) => new InkSplash(s)));
