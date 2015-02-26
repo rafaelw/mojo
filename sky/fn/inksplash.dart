@@ -3,42 +3,37 @@ part of widgets;
 const double _kSplashSize = 400.0;
 const double _kSplashDuration = 500.0;
 
-typedef SplashCompleted(SplashAnchor anchor);
+class SplashAnimation extends AnimationGenerator {
+  double _offsetX;
+  double _offsetY;
 
-class SplashAnchor {
+  Stream<String> _styleChanged;
 
-  sky.ClientRect rect;
-  double x;
-  double y;
-  int _id;
+  Stream<String> get onStyleChanged => _styleChanged;
 
-  static int _nextId = 1;
+  SplashAnimation(sky.ClientRect rect, double x, double y,
+                  { AnimationDone onDone })
+    : _offsetX = x - rect.left,
+      _offsetY = y - rect.top,
+      super(_kSplashDuration,
+            end: _kSplashSize,
+            curve: easeOut,
+            onDone: onDone) {
 
-  AnimationController _animation;
-
-  SplashAnchor(this.rect, this.x, this.y) : _id = _nextId++;
-
-  void start(AnimationDelegate delegate) {
-    _animation = new AnimationController(delegate);
-    _animation.start(
-      begin: 0.0,
-      end: _kSplashSize,
-      duration: _kSplashDuration,
-      curve: easeOut);
-  }
-
-  void stop() {
-    if (_animation != null) {
-      _animation.stop();
-      _animation = null;
-    }
+    _styleChanged = super.onTick.map((p) => '''
+      top: ${_offsetY - p/2}px;
+      left: ${_offsetX - p/2}px;
+      width: ${p}px;
+      height: ${p}px;
+      border-radius: ${p}px;
+      opacity: ${1.0 - (p / _kSplashSize)};
+    ''');
   }
 }
 
-class InkSplash extends Component implements AnimationDelegate {
+class InkSplash extends Component {
 
-  SplashAnchor anchor;
-  SplashCompleted completed;
+  SplashAnimation animation;
 
   static Style _style = new Style('''
     position: absolute;
@@ -64,15 +59,9 @@ class InkSplash extends Component implements AnimationDelegate {
   double _offsetY;
   String _inlineStyle;
 
-  InkSplash({
-    SplashAnchor anchor,
-    this.completed
-  })
-    : anchor = anchor,
-      super(stateful: true, key:anchor._id) {
-    _offsetX = anchor.x - anchor.rect.left;
-    _offsetY = anchor.y - anchor.rect.top;
-  }
+  InkSplash(SplashAnimation animation)
+    : animation = animation,
+      super(stateful: true, key: animation.hashCode);
 
   Node render() {
     return new Container(
@@ -89,29 +78,14 @@ class InkSplash extends Component implements AnimationDelegate {
   }
 
   void didMount() {
-    anchor.start(this);
+    animation.onStyleChanged.listen((style) {
+      setState(() {
+        _inlineStyle = style;
+      });
+    });
   }
 
   void willUnmount() {
-    anchor.stop();
-  }
-
-  void updateAnimation(double p) {
-    if (p == _kSplashSize) {
-      anchor.stop();
-      completed(anchor);
-      return;
-    }
-
-    setState(() {
-      _inlineStyle = '''
-        top: ${_offsetY - p/2}px;
-        left: ${_offsetX - p/2}px;
-        width: ${p}px;
-        height: ${p}px;
-        border-radius: ${p}px;
-        opacity: ${1.0 - (p / _kSplashSize)};
-      ''';
-    });
+    animation.close();
   }
 }

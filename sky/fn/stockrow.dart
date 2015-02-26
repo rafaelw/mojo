@@ -1,6 +1,5 @@
 import 'companylist.dart';
 import 'dart:collection';
-import 'dart:math';
 import 'dart:sky' as sky;
 import 'fn.dart';
 import 'stockarrow.dart';
@@ -9,7 +8,7 @@ import 'widgets.dart';
 class StockRow extends Component {
 
   Stock stock;
-  LinkedHashSet<SplashAnchor> _splashes;
+  LinkedHashSet<SplashAnimation> _splashes;
 
   static Style _style = new Style('''
     transform: translateX(0);
@@ -44,7 +43,7 @@ class StockRow extends Component {
 
   void willUnmount() {
     if (_splashes != null) {
-      _splashes.forEach((splash) { splash.stop(); });
+      _splashes.forEach((splash) { splash.close(); });
       _splashes = null;
     }
   }
@@ -78,13 +77,9 @@ class StockRow extends Component {
       )
     ];
 
+
     if (_splashes != null) {
-      _splashes.forEach((splash) {
-        children.add(new InkSplash(
-          anchor: splash,
-          completed: _splashCompleted
-        ));
-      });
+      children.addAll(_splashes.map((s) => new InkSplash(s)));
     }
 
     return new Container(
@@ -100,14 +95,16 @@ class StockRow extends Component {
   void _handlePointerDown(sky.Event event) {
     setState(() {
       if (_splashes == null) {
-        _splashes = new LinkedHashSet<SplashAnchor>();
+        _splashes = new LinkedHashSet<SplashAnimation>();
       }
 
-      _splashes.add(new SplashAnchor(_getBoundingRect(), event.x, event.y));
+      var splash = new SplashAnimation(_getBoundingRect(), event.x, event.y,
+                                       onDone: _splashDone);
+      _splashes.add(splash);
     });
   }
 
-  void _splashCompleted(SplashAnchor splash) {
+  void _splashDone(SplashAnimation splash) {
     setState(() {
       _splashes.remove(splash);
       if (_splashes.length == 0) {

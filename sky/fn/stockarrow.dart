@@ -1,4 +1,3 @@
-import 'companylist.dart';
 import 'fn.dart';
 import 'dart:math';
 
