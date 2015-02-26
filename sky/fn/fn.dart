@@ -69,6 +69,23 @@ abstract class Node {
     _root.remove();
     _root = null;
   }
+
+  // TODO(rafaelw): It's kind of silly to have this here, but it seemed more
+  // silly to have an Element class just to put this method there.
+  void _syncEvent(String eventName, sky.EventListener listener,
+                  sky.EventListener oldListener) {
+    sky.Element root = _root as sky.Element;
+    if (listener == oldListener)
+      return;
+
+    if (oldListener != null) {
+      root.removeEventListener(eventName, oldListener);
+    }
+
+    if (listener != null) {
+      root.addEventListener(eventName, listener);
+    }
+  }
 }
 
 class Text extends Node {
@@ -88,17 +105,51 @@ class Text extends Node {
     }
 
     _root = old._root;
-//    old._root = null;
     (_root as sky.Text).data = data;
+    return false;
+  }
+}
 
+class Image extends Node {
+
+  static Image _emptyImage = new Image();
+
+  String inlineStyle;
+  String src;
+  sky.EventListener onClick;
+
+  Image({ Object key, this.inlineStyle, this.src, this.onClick }):super(key: key);
+
+  bool _sync(Node old, sky.ParentNode host, sky.Node insertBefore) {
+    if (old == null) {
+      _root = sky.document.createElement('img');
+      parentInsertBefore(host, _root, insertBefore);
+      old = _emptyImage;
+    } else {
+      _root = old._root;
+    }
+
+    sky.HTMLImageElement image = _root as sky.HTMLImageElement;
+    if (src != old.src) {
+      image.src = src;
+      print ('setting src: $src');
+    }
+
+    if (inlineStyle != old.inlineStyle) {
+      image.setAttribute('style', inlineStyle);
+      print ('setting style: $inlineStyle');
+    }
+
+    _syncEvent('click', onClick, old.onClick);
     return false;
   }
 }
 
 var _emptyList = new List<Node>();
-var _emptyContainer = new Container();
 
 class Container extends Node {
+
+  static Container _emptyContainer = new Container();
 
   String inlineStyle;
 
@@ -166,21 +217,6 @@ class Container extends Node {
       idMap.putIfAbsent(child._key, () { didPut = true; return child; });
       // No two children of the same type can have the same key.
       assert(didPut);
-    }
-  }
-
-  void _syncEvent(String eventName, sky.EventListener listener,
-                  sky.EventListener oldListener) {
-    sky.Element root = _root as sky.Element;
-    if (listener == oldListener)
-      return;
-
-    if (oldListener != null) {
-      root.removeEventListener(eventName, oldListener);
-    }
-
-    if (listener != null) {
-      root.addEventListener(eventName, listener);
     }
   }
 

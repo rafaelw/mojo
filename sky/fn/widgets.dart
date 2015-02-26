@@ -10,6 +10,7 @@ part 'button.dart';
 part 'buttonbase.dart';
 part 'checkbox.dart';
 part 'flingcurve.dart';
+part 'icon.dart';
 part 'radio.dart';
 part 'fixedheightscrollable.dart';
 part 'toolbar.dart';

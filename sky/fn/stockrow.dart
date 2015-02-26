@@ -77,6 +77,8 @@ class StockRow extends Component {
     return new Container(
       key: 'StockRow',
       style: _style,
+      onScrollStart: _cancelSplashes,
+      onWheel: _cancelSplashes,
       onPointerDown: _handlePointerDown,
       children: children
     );
@@ -98,13 +100,18 @@ class StockRow extends Component {
     });
   }
 
-  void willUnmount() {
+  void _cancelSplashes(sky.Event event) {
     if (_splashes == null) {
       return;
     }
+
     var splashes = _splashes;
     _splashes = null;
     splashes.forEach((s) { s.cancel(); });
+  }
+
+  void willUnmount() {
+    _cancelSplashes(null);
   }
 
   void _splashDone(SplashAnimation splash) {
