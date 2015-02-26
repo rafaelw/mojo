@@ -1,10 +1,8 @@
 part of widgets;
 
-typedef StreamClosed(FrameGenerator);
-
 class FrameGenerator {
 
-  StreamClosed onDone;
+  Function onDone;
   StreamController _controller;
 
   Stream<double> get onTick => _controller.stream;
@@ -29,7 +27,7 @@ class FrameGenerator {
     _animationId = 0;
     _cancelled = true;
     if (onDone != null) {
-      onDone(this);
+      onDone();
     }
   }
 
@@ -60,7 +58,7 @@ class AnimationGenerator extends FrameGenerator {
     this.begin: 0.0,
     this.end: 1.0,
     this.curve: linear,
-    StreamClosed onDone
+    Function onDone
   }):super(onDone: onDone) {
     double startTime = 0.0;
     _stream = super.onTick.map((timeStamp) {

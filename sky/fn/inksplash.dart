@@ -3,7 +3,8 @@ part of widgets;
 const double _kSplashSize = 400.0;
 const double _kSplashDuration = 500.0;
 
-class SplashAnimation extends AnimationGenerator {
+class SplashAnimation {
+  AnimationGenerator _animation;
   double _offsetX;
   double _offsetY;
 
@@ -11,16 +12,17 @@ class SplashAnimation extends AnimationGenerator {
 
   Stream<String> get onStyleChanged => _styleChanged;
 
-  SplashAnimation(sky.ClientRect rect, double x, double y,
-                  { StreamClosed onDone })
-    : _offsetX = x - rect.left,
-      _offsetY = y - rect.top,
-      super(_kSplashDuration,
-            end: _kSplashSize,
-            curve: easeOut,
-            onDone: onDone) {
+  void cancel() => _animation.cancel();
 
-    _styleChanged = super.onTick.map((p) => '''
+  SplashAnimation(sky.ClientRect rect, double x, double y,
+                  { Function onDone })
+      : _offsetX = x - rect.left,
+        _offsetY = y - rect.top {
+
+    _animation = new AnimationGenerator(_kSplashDuration,
+        end: _kSplashSize, curve: easeOut, onDone: onDone);
+
+    _styleChanged = _animation.onTick.map((p) => '''
       top: ${_offsetY - p/2}px;
       left: ${_offsetX - p/2}px;
       width: ${p}px;
@@ -33,7 +35,7 @@ class SplashAnimation extends AnimationGenerator {
 
 class InkSplash extends Component {
 
-  SplashAnimation animation;
+  Stream<String> onStyleChanged;
 
   static Style _style = new Style('''
     position: absolute;
@@ -59,9 +61,9 @@ class InkSplash extends Component {
   double _offsetY;
   String _inlineStyle;
 
-  InkSplash(SplashAnimation animation)
-    : animation = animation,
-      super(stateful: true, key: animation.hashCode);
+  InkSplash(Stream<String> onStyleChanged)
+    : onStyleChanged = onStyleChanged,
+      super(stateful: true, key: onStyleChanged.hashCode);
 
   Node render() {
     return new Container(
@@ -78,14 +80,10 @@ class InkSplash extends Component {
   }
 
   void didMount() {
-    animation.onStyleChanged.listen((style) {
+    onStyleChanged.listen((style) {
       setState(() {
         _inlineStyle = style;
       });
     });
-  }
-
-  void willUnmount() {
-    animation.cancel();
   }
 }

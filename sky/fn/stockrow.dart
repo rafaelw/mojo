@@ -71,7 +71,7 @@ class StockRow extends Component {
     ];
 
     if (_splashes != null) {
-      children.addAll(_splashes.map((s) => new InkSplash(s)));
+      children.addAll(_splashes.map((s) => new InkSplash(s.onStyleChanged)));
     }
 
     return new Container(
@@ -90,13 +90,28 @@ class StockRow extends Component {
         _splashes = new LinkedHashSet<SplashAnimation>();
       }
 
-      var splash = new SplashAnimation(_getBoundingRect(), event.x, event.y,
-                                       onDone: _splashDone);
+      var splash;
+      splash = new SplashAnimation(_getBoundingRect(), event.x, event.y,
+                                   onDone: () { _splashDone(splash); });
+
       _splashes.add(splash);
     });
   }
 
+  void willUnmount() {
+    if (_splashes == null) {
+      return;
+    }
+    var splashes = _splashes;
+    _splashes = null;
+    splashes.forEach((s) { s.cancel(); });
+  }
+
   void _splashDone(SplashAnimation splash) {
+    if (_splashes == null) {
+      return;
+    }
+
     setState(() {
       _splashes.remove(splash);
       if (_splashes.length == 0) {

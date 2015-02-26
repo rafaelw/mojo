@@ -403,7 +403,7 @@ void _scheduleComponentForRender(Component c) {
   }
 }
 
-enum MountState { UNMOUNTED, MOUNTED, REMOVED }
+enum MountState { UNMOUNTED, MOUNTING, MOUNTED, UNMOUNTING, REMOVED }
 
 abstract class Component extends Node {
   bool _dirty = true; // components begin dirty because they haven't rendered.
@@ -424,6 +424,7 @@ abstract class Component extends Node {
   void _remove() {
     assert(_rendered != null);
     assert(_root != null);
+    _mountState = MountState.UNMOUNTING;
     willUnmount();
     _mountState = MountState.REMOVED;
     _rendered._remove();
@@ -470,6 +471,10 @@ abstract class Component extends Node {
       return;
     }
 
+    if (_mountState == MountState.UNMOUNTED) {
+      _mountState = MountState.MOUNTING;
+    }
+
     var oldRendered = _rendered;
     int lastOrder = _currentOrder;
     _currentOrder = _order;
@@ -488,13 +493,18 @@ abstract class Component extends Node {
     }
     _root = _rendered._root;
     assert(_rendered._root is sky.Node);
-    if (_mountState == MountState.UNMOUNTED) {
-      _mountState = MountState.MOUNTED;
+    if (_mountState == MountState.MOUNTING) {
       didMount();
+      _mountState = MountState.MOUNTED;
     }
   }
 
   void _renderIfDirty() {
+    if (_mountState == MountState.UNMOUNTING ||
+        _mountState == MountState.REMOVED) {
+      return;
+    }
+
     assert(_rendered != null);
     var rendered = _rendered;
     while (rendered is Component) {
@@ -506,10 +516,6 @@ abstract class Component extends Node {
   }
 
   void setState(Function fn()) {
-    if (_mountState == MountState.REMOVED) {
-      return;
-    }
-
     assert(_mountState == MountState.MOUNTED);
     assert(_rendered != null); // cannot setState before mounting.
     _dirty = true;
