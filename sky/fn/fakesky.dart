@@ -1,3 +1,11 @@
+import 'dart:async';
+
+void assertHasParentNode(Node n) { assert(n.parentNode != null); }
+void assertHasParentNodes(List<Node> list) {
+  for (var n in list) {
+    assertHasParentNode(n);
+  }
+}
 
 class Node {
 
@@ -7,22 +15,12 @@ class Node {
   Node();
 
   void insertBefore(List<Node> nodes) {
-    assert(parentNode != null);
-
-    if (previousSibling == null) {
-      parentNode.firstChild = nodes[0];
-    } else {
-      previousSibling.nextSibling = nodes[0];
+    int count = nodes.length;
+    while (count-- > 0) {
+      parentNode._insertBefore(nodes[count], this);
     }
 
-    int length = nodes.length;
-    for (var i = 0; i < length - 1; i++) {
-      nodes[i].nextSibling = nodes[i + 1];
-      nodes[i].parentNode = parentNode;
-    }
-
-    nodes[length - 1].nextSibling = this;
-    nodes[length - 1].parentNode = parentNode;
+    assertHasParentNodes(nodes);
   }
 
   remove() {
@@ -62,41 +60,66 @@ class ParentNode extends Node {
   Node setChild(Node node) {
     firstChild = node;
     lastChild = node;
+    node.parentNode = this;
+    assertHasParentNode(node);
+    return node;
+  }
+
+  Node _insertBefore(Node node, Node ref) {
+    assert(ref == null || ref.parentNode == this);
+
+    if (node.parentNode != null) {
+      node.remove();
+    }
+
+    node.parentNode = this;
+
+    if (firstChild == null && lastChild == null) {
+      firstChild = node;
+      lastChild = node;
+    } else if (ref == null) {
+      node.previousSibling = lastChild;
+      lastChild.nextSibling = node;
+      lastChild = node;
+    } else {
+      if (ref == firstChild) {
+        assert(ref.previousSibling == null);
+        firstChild = node;
+      }
+      node.previousSibling = ref.previousSibling;
+      ref.previousSibling = node;
+      node.nextSibling = ref;
+    }
+
+    assertHasParentNode(node);
     return node;
   }
 
   Node appendChild(Node node) {
-    node.remove();
-
-    node.parentNode = this;
-
-    if (firstChild == null) {
-      assert(lastChild == null);
-      firstChild = node;
-      lastChild = node;
-      return node;
-    }
-
-    lastChild.nextSibling = node;
-    node.previousSibling = lastChild;
-    lastChild = node;
-    return node;
+    return _insertBefore(node, null);
   }
 }
 
 class Element extends ParentNode {
-  Element() : super();
-
   void addEventListener(String type, EventListener listener, [bool useCapture = false]) {}
-
+  void removeEventListener(String type, EventListener listener) {}
   void setAttribute(String name, [String value]) {}
 }
 
 class Document extends ParentNode {
   Document();
   Element createElement(String tagName) {
-    return new Element();
+    switch (tagName) {
+      case 'img' : return new HTMLImageElement();
+      default : return new Element();
+    }
   }
+}
+
+class HTMLImageElement extends Element {
+  Image();
+  String src;
+  Object style = {};
 }
 
 class Event {
@@ -105,5 +128,21 @@ class Event {
 
 typedef EventListener(Event event);
 
+void _callRAF(Function fn) {
+  fn(new DateTime.now().millisecondsSinceEpoch.toDouble());
+}
+
+class Window {
+  int requestAnimationFrame(Function fn) {
+    new Timer(const Duration(milliseconds: 16), () {
+      _callRAF(fn);
+    });
+  }
+
+  void cancelAnimationFrame(int id) {
+  }
+}
+
 Document document = new Document();
 
+Window window = new Window();
