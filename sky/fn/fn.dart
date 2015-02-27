@@ -114,11 +114,13 @@ class Image extends Node {
 
   static Image _emptyImage = new Image();
 
-  String inlineStyle;
   String src;
+  int width;
+  int height;
   sky.EventListener onClick;
 
-  Image({ Object key, this.inlineStyle, this.src, this.onClick }):super(key: key);
+  Image({ Object key, this.width, this.height, this.src, this.onClick })
+    : super(key: key);
 
   bool _sync(Node old, sky.ParentNode host, sky.Node insertBefore) {
     if (old == null) {
@@ -132,12 +134,15 @@ class Image extends Node {
     sky.HTMLImageElement image = _root as sky.HTMLImageElement;
     if (src != old.src) {
       image.src = src;
-      print ('setting src: $src');
     }
 
-    if (inlineStyle != old.inlineStyle) {
-      image.setAttribute('style', inlineStyle);
-      print ('setting style: $inlineStyle');
+    if (width != old.width) {
+      image.style['width'] = '${width}px';
+      print(image.style['width']);
+    }
+    if (height != old.height) {
+      image.style['height'] = '${height}px';
+      print(image.style['height']);
     }
 
     _syncEvent('click', onClick, old.onClick);
@@ -204,7 +209,6 @@ class Container extends Node {
     }
     _children = null;
   }
-
 
   void _debugReportDuplicateIds() {
     var idMap = new HashMap<String, Node>();

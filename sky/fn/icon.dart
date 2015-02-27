@@ -19,8 +19,9 @@ class Icon extends Component {
     return new Image(
       key: 'Icon',
       onClick: onClick,
-      inlineStyle: 'height: ${size}px; width: ${size}px',
-      src: ''${kAssetBase}/${category}/2x_web/ic_${subtype}_${size}dp.png''
+      width: size,
+      height: size,
+      src: '${kAssetBase}/${category}/2x_web/ic_${subtype}_${size}dp.png'
     );
   }
 }

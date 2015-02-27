@@ -25,7 +25,7 @@ class StocksApp extends App {
       children: [
         new Toolbar(
           children: [
-            new Icon(key: 'menu', size: 24, type: 'navigation/menu', onClick: _toggleDrawer),
+            new Icon(key: 'menu', size: 24, type: 'navigation/menu_white', onClick: _toggleDrawer),
             new Text('I am a stocks app'),
             new Icon(key: 'search', size: 24, type: 'action/search_white'),
             new Icon(key: 'more_white', size: 24, type: 'navigation/more_vert_white')
