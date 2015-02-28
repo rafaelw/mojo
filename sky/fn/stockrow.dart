@@ -105,9 +105,11 @@ class StockRow extends Component {
       return;
     }
 
-    var splashes = _splashes;
-    _splashes = null;
-    splashes.forEach((s) { s.cancel(); });
+    setState(() {
+      var splashes = _splashes;
+      _splashes = null;
+      splashes.forEach((s) { s.cancel(); });
+    });
   }
 
   void willUnmount() {
