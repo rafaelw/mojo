@@ -135,7 +135,7 @@ class Drawer extends Component {
   List<Node> children;
 
   Drawer({
-    String key,
+    Object key,
     this.onPositionChanged,
     this.handleMaskFling,
     this.handleMaskTap,

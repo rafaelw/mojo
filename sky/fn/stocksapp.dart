@@ -35,7 +35,10 @@ class StocksApp extends App {
       handlePointerMove: _drawerAnimation.handlePointerMove,
       handlePointerUp: _drawerAnimation.handlePointerUp,
       children: [
-        new Text('I am a drawer')
+        new DrawerHeader(
+          key: 'DrawerHeader',
+          children: [new Text('Stocks')]
+        )
       ]
     );
 
