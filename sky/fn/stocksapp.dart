@@ -8,6 +8,8 @@ import 'widgets.dart';
 
 class StocksApp extends App {
 
+  DrawerAnimation _drawerAnimation;
+
   static Style _style = new Style('''
     display: flex;
     flex-direction: column;
@@ -18,25 +20,39 @@ class StocksApp extends App {
 
   StocksApp() : super();
 
+  void didMount() {
+    _drawerAnimation = new DrawerAnimation();
+  }
+
   Node render() {
+    var drawer = new Drawer(
+      key: 'Drawer',
+      onPositionChanged: _drawerAnimation.onPositionChanged,
+      handleMaskFling: _drawerAnimation.handleFlingStart,
+      handleMaskTap: _drawerAnimation.handleMaskTap,
+      handlePointerCancel: _drawerAnimation.handlePointerCancel,
+      handlePointerDown: _drawerAnimation.handlePointerDown,
+      handlePointerMove: _drawerAnimation.handlePointerMove,
+      handlePointerUp: _drawerAnimation.handlePointerUp,
+      children: [
+        new Text('I am a drawer')
+      ]
+    );
+
+    var toolbar = new Toolbar(
+      children: [
+        new Icon(key: 'menu', onClick: _drawerAnimation.toggle,
+                 size: 24, type: 'navigation/menu_white'),
+        new Text('I am a stocks app'),
+        new Icon(key: 'search', size: 24, type: 'action/search_white'),
+        new Icon(key: 'more_white', size: 24, type: 'navigation/more_vert_white')
+      ]
+    );
+
     return new Container(
       key: 'StocksApp',
       style: _style,
-      children: [
-        new Toolbar(
-          children: [
-            new Icon(key: 'menu', size: 24, type: 'navigation/menu_white', onClick: _toggleDrawer),
-            new Text('I am a stocks app'),
-            new Icon(key: 'search', size: 24, type: 'action/search_white'),
-            new Icon(key: 'more_white', size: 24, type: 'navigation/more_vert_white')
-          ]
-        ),
-        new Stocklist(oracle.stocks)
-      ]
+      children: [drawer, toolbar, new Stocklist(oracle.stocks)]
     );
-  }
-
-  _toggleDrawer(sky.Event event) {
-    print('drawer toggled');
   }
 }

@@ -6,17 +6,17 @@ abstract class ButtonBase extends Component {
 
   ButtonBase({ Object key }) : super(key:key);
 
-  void _handlePointerDown(sky.Event e) {
+  void _handlePointerDown(_) {
     setState(() {
       _highlight = true;
     });
   }
-  void _handlePointerUp(sky.Event e) {
+  void _handlePointerUp(_) {
     setState(() {
       _highlight = false;
     });
   }
-  void _handlePointerCancel(sky.Event e) {
+  void _handlePointerCancel(_) {
     setState(() {
       _highlight = false;
     });

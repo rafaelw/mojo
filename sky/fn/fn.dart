@@ -159,14 +159,16 @@ class Container extends Node {
   String inlineStyle;
 
   sky.EventListener onClick;
-  sky.EventListener onPointerDown;
-  sky.EventListener onPointerUp;
+  sky.EventListener onFlingCancel;
+  sky.EventListener onFlingStart;
+  sky.EventListener onGestureTap;
   sky.EventListener onPointerCancel;
+  sky.EventListener onPointerDown;
+  sky.EventListener onPointerMove;
+  sky.EventListener onPointerUp;
+  sky.EventListener onScrollEnd;
   sky.EventListener onScrollStart;
   sky.EventListener onScrollUpdate;
-  sky.EventListener onScrollEnd;
-  sky.EventListener onFlingStart;
-  sky.EventListener onFlingCancel;
   sky.EventListener onWheel;
 
   List<Node> _children = null;
@@ -181,14 +183,16 @@ class Container extends Node {
 
     // Events
     this.onClick,
-    this.onPointerDown,
-    this.onPointerUp,
+    this.onFlingCancel,
+    this.onFlingStart,
+    this.onGestureTap,
     this.onPointerCancel,
+    this.onPointerDown,
+    this.onPointerMove,
+    this.onPointerUp,
+    this.onScrollEnd,
     this.onScrollStart,
     this.onScrollUpdate,
-    this.onScrollEnd,
-    this.onFlingStart,
-    this.onFlingCancel,
     this.onWheel
   }) : super(key:key) {
 
@@ -226,14 +230,16 @@ class Container extends Node {
 
   void _syncEvents([Container old]) {
     _syncEvent('click', onClick, old.onClick);
-    _syncEvent('pointerdown', onPointerDown, old.onPointerDown);
-    _syncEvent('pointerup', onPointerUp, old.onPointerUp);
-    _syncEvent('pointercancel', onPointerCancel, old.onPointerCancel);
+    _syncEvent('gestureflingcancel', onFlingCancel, old.onFlingCancel);
+    _syncEvent('gestureflingstart', onFlingStart, old.onFlingStart);
+    _syncEvent('gesturescrollend', onScrollEnd, old.onScrollEnd);
     _syncEvent('gesturescrollstart', onScrollStart, old.onScrollStart);
     _syncEvent('gesturescrollupdate', onScrollUpdate, old.onScrollUpdate);
-    _syncEvent('gesturescrollend', onScrollEnd, old.onScrollEnd);
-    _syncEvent('gestureflingstart', onFlingStart, old.onFlingStart);
-    _syncEvent('gestureflingcancel', onFlingCancel, old.onFlingCancel);
+    _syncEvent('gesturetap', onGestureTap, old.onGestureTap);
+    _syncEvent('pointercancel', onPointerCancel, old.onPointerCancel);
+    _syncEvent('pointerdown', onPointerDown, old.onPointerDown);
+    _syncEvent('pointermove', onPointerMove, old.onPointerMove);
+    _syncEvent('pointerup', onPointerUp, old.onPointerUp);
     _syncEvent('wheel', onWheel, old.onWheel);
   }
 
@@ -570,7 +576,7 @@ abstract class Component extends Node {
 abstract class App extends Component {
   sky.Node _host = null;
   App({ bool devMode : false })
-    : super(key:'App') {
+    : super(key:'App', stateful: true) {
 
     _debugCheckingEnabled = devMode;
     _host = sky.document.createElement('div');
@@ -578,6 +584,7 @@ abstract class App extends Component {
 
     new Future.microtask(() {
       Stopwatch sw = new Stopwatch()..start();
+      didMount();
       _sync(null, _host, null);
       assert(_root is sky.Node);
       sw.stop();

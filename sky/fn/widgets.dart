@@ -9,6 +9,7 @@ part 'box.dart';
 part 'button.dart';
 part 'buttonbase.dart';
 part 'checkbox.dart';
+part 'drawer.dart';
 part 'flingcurve.dart';
 part 'icon.dart';
 part 'radio.dart';

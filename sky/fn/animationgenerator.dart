@@ -45,6 +45,8 @@ class FrameGenerator {
   }
 }
 
+const double _kFrameTime = 1000 / 60;
+
 class AnimationGenerator extends FrameGenerator {
 
   Stream<double> get onTick => _stream;
@@ -61,16 +63,24 @@ class AnimationGenerator extends FrameGenerator {
     Function onDone
   }):super(onDone: onDone) {
     double startTime = 0.0;
+    double targetTime = 0.0;
+    bool done = false;
     _stream = super.onTick.map((timeStamp) {
       if (startTime == 0.0) {
         startTime = timeStamp;
+        targetTime = startTime + duration;
       }
 
-      double elapsedTime = timeStamp - startTime;
-      return math.max(0.0, math.min(1.0, elapsedTime / duration));
+      // Clamp the final frame to target time so we terminate the series with
+      // 1.0 exactly.
+      if ((timeStamp - targetTime).abs() <= _kFrameTime) {
+        return 1.0;
+      }
+
+      return (timeStamp - startTime) / duration;
     })
-    .takeWhile((t) => t < 1.0)
-    .map((t) => begin + (end - begin) * curve.transform(t));
+    .takeWhile((t) => t <= 1.0)
+    .map((t) =>  begin + (end - begin) * curve.transform(t));
   }
 }
 
@@ -102,6 +112,9 @@ class Cubic implements Curve {
   const Cubic(this.a, this.b, this.c, this.d);
 
   double transform(double t) {
+    if (t == 0.0 || t == 1.0)
+      return t;
+
     double start = 0.0;
     double end = 1.0;
     while (true) {
