@@ -38,6 +38,25 @@ class StocksApp extends App {
         new DrawerHeader(
           key: 'DrawerHeader',
           children: [new Text('Stocks')]
+        ),
+        new MenuItem(
+          key: 'Inbox',
+          children: [new Text('Inbox')]
+        ),
+        new MenuDivider(
+          key: 'Divider'
+        ),
+        new MenuItem(
+          key: 'Drafts',
+          children: [new Text('Drafts')]
+        ),
+        new MenuItem(
+          key: 'Settings',
+          children: [new Text('Settings')]
+        ),
+        new MenuItem(
+          key: 'Help & Feedback',
+          children: [new Text('Help & Feedback')]
         )
       ]
     );

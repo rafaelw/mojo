@@ -8,13 +8,16 @@ class Icon extends Component {
   String type;
   sky.EventListener onClick;
 
-  Icon({ String key, this.size, this.type, this.onClick }) : super(key:key);
+  Icon({ String key, this.size, this.type: '', this.onClick }) : super(key:key);
 
   Node render() {
+    String category = '';
+    String subtype = '';
     List<String> parts = type.split('/');
-    assert(parts.length == 2);
-    String category = parts[0];
-    String subtype = parts[1];
+    if (parts.length == 2) {
+      category = parts[0];
+      subtype = parts[1];
+    }
 
     return new Image(
       key: 'Icon',
