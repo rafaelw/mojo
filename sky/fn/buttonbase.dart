@@ -4,7 +4,7 @@ abstract class ButtonBase extends Component {
 
   bool _highlight = false;
 
-  ButtonBase({ Object key }) : super(key:key);
+  ButtonBase({ Object key }) : super(key: key);
 
   void _handlePointerDown(_) {
     setState(() {

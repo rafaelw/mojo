@@ -36,12 +36,15 @@ class Radio extends ButtonBase {
     margin: 2px;'''
   );
 
-  Radio({ Object key, this.onChanged, this.value, this.groupValue })
-      : super(key:key);
+  Radio({
+    Object key,
+    this.onChanged,
+    this.value,
+    this.groupValue
+  }) : super(key: key);
 
   Node render() {
     return new Container(
-      key: 'Radio',
       style: _highlight ? _highlightStyle : _style,
       onClick: _handleClick,
       onPointerDown: _handlePointerDown,

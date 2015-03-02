@@ -145,7 +145,7 @@ class Drawer extends Component {
     this.handlePointerMove,
     this.handlePointerUp,
     this.children
-  }) : super(key:key);
+  }) : super(key: key);
 
   double _position = -_kWidth;
 
@@ -172,7 +172,6 @@ class Drawer extends Component {
     String contentInlineStyle = 'transform: translateX(${_position}px)';
 
     return new Container(
-      key: 'Drawer',
       style: _style,
       inlineStyle: inlineStyle,
       onPointerDown: handlePointerDown,

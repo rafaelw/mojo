@@ -13,7 +13,12 @@ class Icon extends Component {
   String type;
   sky.EventListener onClick;
 
-  Icon({ String key, this.size, this.type: '', this.onClick }) : super(key:key);
+  Icon({
+    String key,
+    this.size,
+    this.type: '',
+    this.onClick
+  }) : super(key: key);
 
   Node render() {
     String category = '';
@@ -25,7 +30,6 @@ class Icon extends Component {
     }
 
     return new Image(
-      key: 'Icon',
       style: _style,
       onClick: onClick,
       width: size,

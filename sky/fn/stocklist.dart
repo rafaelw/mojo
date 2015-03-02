@@ -7,13 +7,10 @@ class Stocklist extends FixedHeightScrollable {
 
   List<Stock> stocks;
 
-  Stocklist(this.stocks)
-    : super(
-        key:'Stocklist',
-        itemHeight: 80.0,
-        height: 800.0,
-        minOffset: 0.0
-      );
+  Stocklist({
+    Object key,
+    this.stocks
+  }) : super(key: key, itemHeight: 80.0, height: 800.0, minOffset: 0.0);
 
   List<Node> renderItems(int start, int count) {
     var items = [];

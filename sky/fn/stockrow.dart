@@ -37,7 +37,7 @@ class StockRow extends Component {
     text-align: right;'''
   );
 
-  StockRow({ Stock stock }) : super(key:stock.symbol) {
+  StockRow({Stock stock}) : super(key: stock.symbol) {
     this.stock = stock;
   }
 
@@ -50,7 +50,6 @@ class StockRow extends Component {
 
     List<Node> children = [
       new StockArrow(
-        key: 'StockArrow',
         percentChange: stock.percentChange
       ),
       new Container(
@@ -75,7 +74,6 @@ class StockRow extends Component {
     }
 
     return new Container(
-      key: 'StockRow',
       style: _style,
       onScrollStart: _cancelSplashes,
       onWheel: _cancelSplashes,

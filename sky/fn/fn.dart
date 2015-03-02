@@ -71,8 +71,8 @@ abstract class Node {
   String _key = null;
   sky.Node _root = null;
 
-  Node({ Object key: '' }) {
-    _key = "$runtimeType-$key";
+  Node({ Object key }) {
+    _key = key == null ? "$runtimeType" : "$runtimeType-$key";
   }
 
   // Return true IFF the old node has *become* the new node (should be

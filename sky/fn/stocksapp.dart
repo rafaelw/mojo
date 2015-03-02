@@ -22,7 +22,6 @@ class StocksApp extends App {
 
   Node render() {
     var drawer = new Drawer(
-      key: 'Drawer',
       onPositionChanged: _drawerAnimation.onPositionChanged,
       handleMaskFling: _drawerAnimation.handleFlingStart,
       handleMaskTap: _drawerAnimation.handleMaskTap,
@@ -32,7 +31,6 @@ class StocksApp extends App {
       handlePointerUp: _drawerAnimation.handlePointerUp,
       children: [
         new DrawerHeader(
-          key: 'DrawerHeader',
           children: [new Text('Stocks')]
         ),
         new MenuItem(
@@ -40,7 +38,6 @@ class StocksApp extends App {
           children: [new Text('Inbox')]
         ),
         new MenuDivider(
-          key: 'Divider'
         ),
         new MenuItem(
           key: 'Drafts',
@@ -70,7 +67,7 @@ class StocksApp extends App {
     return new Container(
       key: 'StocksApp',
       style: _style,
-      children: [drawer, toolbar, new Stocklist(oracle.stocks)]
+      children: [drawer, toolbar, new Stocklist(stocks: oracle.stocks)]
     );
   }
 }

@@ -22,15 +22,12 @@ class MenuItem extends Component {
 
   Node render() {
     return new Container(
-      key: 'MenuItem',
       style: _style,
       children: [
         new Icon(
-          key: 'Icon',
           size: 24
         ),
         new Container(
-          key: 'Label',
           style: _labelStyle,
           children: children
         )

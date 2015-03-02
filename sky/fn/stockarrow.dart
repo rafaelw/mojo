@@ -34,7 +34,7 @@ class StockArrow extends Component {
     border-top: 9px solid white'''
   );
 
-  StockArrow({ Object key, this.percentChange }) : super(key:key);
+  StockArrow({ Object key, this.percentChange }) : super(key: key);
 
   final List<String> _kRedColors = [
     '#E57373',
@@ -74,12 +74,10 @@ class StockArrow extends Component {
     String type = up ? 'bottom' : 'top';
 
     return new Container(
-      key: 'StockArrow',
       inlineStyle: 'border-color: $border',
       style: _style,
       children: [
         new Container(
-          key: 'Arrow',
           inlineStyle: 'border-$type-color: $border',
           style: up ? _upStyle : _downStyle
         )

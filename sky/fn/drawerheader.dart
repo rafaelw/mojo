@@ -29,7 +29,6 @@ class DrawerHeader extends Component {
 
   Node render() {
     return new Container(
-      key: 'DrawerHeader',
       style: _style,
       children: [
         new Container(

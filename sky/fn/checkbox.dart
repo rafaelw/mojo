@@ -51,11 +51,10 @@ class Checkbox extends ButtonBase {
     border-color: #0f9d58;'''
   );
 
-  Checkbox({ Object key, this.onChanged, this.checked }) : super(key:key);
+  Checkbox({ Object key, this.onChanged, this.checked }) : super(key: key);
 
   Node render() {
     return new Container(
-      key: 'Checkbox',
       style: _style,
       onClick: _handleClick,
       onPointerDown: _handlePointerDown,

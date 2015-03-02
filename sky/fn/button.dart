@@ -26,7 +26,7 @@ class Button extends ButtonBase {
   Node content;
   sky.EventListener onClick;
 
-  Button({ Object key, this.content, this.onClick }) : super(key:key);
+  Button({ Object key, this.content, this.onClick }) : super(key: key);
 
   Node render() {
     return new Container(

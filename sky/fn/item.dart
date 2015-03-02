@@ -12,11 +12,10 @@ class Item extends Component {
 
   Color _color = Color.GREEN;
 
-  Item({ Object key, this.label }) : super(key:key);
+  Item({ Object key, this.label }) : super(key: key);
 
   Node render() {
     return new Container(
-      key: 'Item',
       children: [
         new Radio(
           onChanged: changed,

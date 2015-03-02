@@ -28,7 +28,7 @@ abstract class FixedHeightScrollable extends Component {
     this.height,
     this.minOffset,
     this.maxOffset
-  }) : super(key:key) {}
+  }) : super(key: key) {}
 
 
   List<Node> renderItems(int start, int count);
@@ -49,7 +49,6 @@ abstract class FixedHeightScrollable extends Component {
     var items = renderItems(itemNumber, drawCount);
 
     return new Container(
-      key: 'FixedHeightScrollable',
       style: _style,
       onFlingStart: _handleFlingStart,
       onFlingCancel: _handleFlingCancel,
@@ -57,7 +56,6 @@ abstract class FixedHeightScrollable extends Component {
       onWheel: _handleWheel,
       children: [
         new Container(
-          key: 'ScrollArea',
           style: _scrollAreaStyle,
           inlineStyle: transformStyle,
           children: items

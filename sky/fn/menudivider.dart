@@ -11,7 +11,6 @@ class MenuDivider extends Component {
 
   Node render() {
     return new Container(
-      key: 'MenuDivider',
       style: _style
     );
   }

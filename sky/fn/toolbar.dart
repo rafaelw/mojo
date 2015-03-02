@@ -14,11 +14,10 @@ class Toolbar extends Component {
     box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);'''
   );
 
-  Toolbar({ String key, this.children }) : super(key:key);
+  Toolbar({String key, this.children}) : super(key: key);
 
   Node render() {
     return new Container(
-      key: 'Toolbar',
       style: _style,
       children: children
     );

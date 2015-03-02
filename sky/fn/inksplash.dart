@@ -84,11 +84,9 @@ class InkSplash extends Component {
     _ensureListening();
 
     return new Container(
-      key: "InkSplash",
       style: _style,
       children: [
         new Container(
-          key: "Splash",
           inlineStyle: _inlineStyle,
           style: _splashStyle
         )

@@ -25,11 +25,10 @@ class Box extends Component {
   String title;
   List<Node> children;
 
-  Box({ String key, this.title, this.children }) : super(key:key);
+  Box({String key, this.title, this.children }) : super(key: key);
 
   Node render() {
     return new Container(
-      key: 'Box',
       style: _style,
       children: [
         new Container(
