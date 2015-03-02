@@ -4,6 +4,11 @@ const String kAssetBase = '/sky/assets/material-design-icons';
 
 class Icon extends Component {
 
+  static Style _style = new Style('''
+    padding: 8px;
+    margin: 0 4px;'''
+  );
+
   int size;
   String type;
   sky.EventListener onClick;
@@ -21,6 +26,7 @@ class Icon extends Component {
 
     return new Image(
       key: 'Icon',
+      style: _style,
       onClick: onClick,
       width: size,
       height: size,

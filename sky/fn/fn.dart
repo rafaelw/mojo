@@ -69,23 +69,6 @@ abstract class Node {
     _root.remove();
     _root = null;
   }
-
-  // TODO(rafaelw): It's kind of silly to have this here, but it seemed more
-  // silly to have an Element class just to put this method there.
-  void _syncEvent(String eventName, sky.EventListener listener,
-                  sky.EventListener oldListener) {
-    sky.Element root = _root as sky.Element;
-    if (listener == oldListener)
-      return;
-
-    if (oldListener != null) {
-      root.removeEventListener(eventName, oldListener);
-    }
-
-    if (listener != null) {
-      root.addEventListener(eventName, listener);
-    }
-  }
 }
 
 class Text extends Node {
@@ -110,51 +93,13 @@ class Text extends Node {
   }
 }
 
-class Image extends Node {
-
-  static Image _emptyImage = new Image();
-
-  String src;
-  int width;
-  int height;
-  sky.EventListener onClick;
-
-  Image({ Object key, this.width, this.height, this.src, this.onClick })
-    : super(key: key);
-
-  bool _sync(Node old, sky.ParentNode host, sky.Node insertBefore) {
-    if (old == null) {
-      _root = sky.document.createElement('img');
-      parentInsertBefore(host, _root, insertBefore);
-      old = _emptyImage;
-    } else {
-      _root = old._root;
-    }
-
-    sky.HTMLImageElement image = _root as sky.HTMLImageElement;
-    if (src != old.src) {
-      image.src = src;
-    }
-
-    if (width != old.width) {
-      image.style['width'] = '${width}px';
-      print(image.style['width']);
-    }
-    if (height != old.height) {
-      image.style['height'] = '${height}px';
-      print(image.style['height']);
-    }
-
-    _syncEvent('click', onClick, old.onClick);
-    return false;
-  }
-}
-
 var _emptyList = new List<Node>();
 
-class Container extends Node {
+abstract class Element extends Node {
 
-  static Container _emptyContainer = new Container();
+  String get _tagName;
+
+  Element get _emptyElement;
 
   String inlineStyle;
 
@@ -174,7 +119,7 @@ class Container extends Node {
   List<Node> _children = null;
   String _className = '';
 
-  Container({
+  Element({
     Object key,
     List<Node> children,
     Style style,
@@ -228,7 +173,22 @@ class Container extends Node {
     }
   }
 
-  void _syncEvents([Container old]) {
+  void _syncEvent(String eventName, sky.EventListener listener,
+                  sky.EventListener oldListener) {
+    sky.Element root = _root as sky.Element;
+    if (listener == oldListener)
+      return;
+
+    if (oldListener != null) {
+      root.removeEventListener(eventName, oldListener);
+    }
+
+    if (listener != null) {
+      root.addEventListener(eventName, listener);
+    }
+  }
+
+  void _syncEvents([Element old]) {
     _syncEvent('click', onClick, old.onClick);
     _syncEvent('gestureflingcancel', onFlingCancel, old.onFlingCancel);
     _syncEvent('gestureflingstart', onFlingStart, old.onFlingStart);
@@ -243,13 +203,14 @@ class Container extends Node {
     _syncEvent('wheel', onWheel, old.onWheel);
   }
 
-  void _syncNode([Container old]) {
+  void _syncNode([Element old]) {
     if (old == null) {
-      old = _emptyContainer;
+      old = _emptyElement;
     }
 
-    sky.Element root = _root as sky.Element;
+    _syncEvents(old);
 
+    sky.Element root = _root as sky.Element;
     if (_className != old._className) {
       root.setAttribute('class', _className);
     }
@@ -257,19 +218,17 @@ class Container extends Node {
     if (inlineStyle != old.inlineStyle) {
       root.setAttribute('style', inlineStyle);
     }
-
-    _syncEvents(old);
   }
 
   bool _sync(Node old, sky.ParentNode host, sky.Node insertBefore) {
     // print("---Syncing children of $_key");
 
-    Container oldContainer = old as Container;
+    Element oldElement = old as Element;
 
-    if (oldContainer == null) {
-      // print("...no oldContainer, initial render");
+    if (oldElement == null) {
+      // print("...no oldElement, initial render");
 
-      _root = sky.document.createElement('div');
+      _root = sky.document.createElement(_tagName);
       _syncNode();
 
       for (var child in _children) {
@@ -281,16 +240,16 @@ class Container extends Node {
       return false;
     }
 
-    _root = oldContainer._root;
-    oldContainer._root = null;
+    _root = oldElement._root;
+    oldElement._root = null;
     sky.Element root = (_root as sky.Element);
 
-    _syncNode(oldContainer);
+    _syncNode(oldElement);
 
     var startIndex = 0;
     var endIndex = _children.length;
 
-    var oldChildren = oldContainer._children;
+    var oldChildren = oldElement._children;
     var oldStartIndex = 0;
     var oldEndIndex = oldChildren.length;
 
@@ -418,8 +377,179 @@ class Container extends Node {
       advanceOldStartIndex();
     }
 
-    oldContainer._children = null;
+    oldElement._children = null;
     return false;
+  }
+}
+
+class Container extends Element {
+
+  String get _tagName => 'div';
+
+  static Container _emptyContainer = new Container();
+
+  Element get _emptyElement => _emptyContainer;
+
+  Container({
+    Object key,
+    List<Node> children,
+    Style style,
+    String inlineStyle,
+    sky.EventListener onClick,
+    sky.EventListener onFlingCancel,
+    sky.EventListener onFlingStart,
+    sky.EventListener onGestureTap,
+    sky.EventListener onPointerCancel,
+    sky.EventListener onPointerDown,
+    sky.EventListener onPointerMove,
+    sky.EventListener onPointerUp,
+    sky.EventListener onScrollEnd,
+    sky.EventListener onScrollStart,
+    sky.EventListener onScrollUpdate,
+    sky.EventListener onWheel
+  }) : super(
+    key: key,
+    children: children,
+    style: style,
+    inlineStyle: inlineStyle,
+    onClick: onClick,
+    onFlingCancel: onFlingCancel,
+    onFlingStart: onFlingStart,
+    onGestureTap: onGestureTap,
+    onPointerCancel: onPointerCancel,
+    onPointerDown: onPointerDown,
+    onPointerMove: onPointerMove,
+    onPointerUp: onPointerUp,
+    onScrollEnd: onScrollEnd,
+    onScrollStart: onScrollStart,
+    onScrollUpdate: onScrollUpdate,
+    onWheel: onWheel
+  );
+}
+
+class Image extends Element {
+
+  String get _tagName => 'img';
+
+  static Image _emptyImage = new Image();
+  Element get _emptyElement => _emptyImage;
+
+  String src;
+  int width;
+  int height;
+
+  Image({
+    Object key,
+    List<Node> children,
+    Style style,
+    String inlineStyle,
+    sky.EventListener onClick,
+    sky.EventListener onFlingCancel,
+    sky.EventListener onFlingStart,
+    sky.EventListener onGestureTap,
+    sky.EventListener onPointerCancel,
+    sky.EventListener onPointerDown,
+    sky.EventListener onPointerMove,
+    sky.EventListener onPointerUp,
+    sky.EventListener onScrollEnd,
+    sky.EventListener onScrollStart,
+    sky.EventListener onScrollUpdate,
+    sky.EventListener onWheel,
+    this.width,
+    this.height,
+    this.src
+  }) : super(
+    key: key,
+    children: children,
+    style: style,
+    inlineStyle: inlineStyle,
+    onClick: onClick,
+    onFlingCancel: onFlingCancel,
+    onFlingStart: onFlingStart,
+    onGestureTap: onGestureTap,
+    onPointerCancel: onPointerCancel,
+    onPointerDown: onPointerDown,
+    onPointerMove: onPointerMove,
+    onPointerUp: onPointerUp,
+    onScrollEnd: onScrollEnd,
+    onScrollStart: onScrollStart,
+    onScrollUpdate: onScrollUpdate,
+    onWheel: onWheel
+  );
+
+  void _syncNode([Element old]) {
+    super._syncNode(old);
+
+    Image oldImage = old != null ? old : _emptyImage;
+    sky.HTMLImageElement skyImage = _root as sky.HTMLImageElement;
+    if (src != oldImage.src) {
+      skyImage.src = src;
+    }
+
+    if (width != oldImage.width) {
+      skyImage.style['width'] = '${width}px';
+    }
+    if (height != oldImage.height) {
+      skyImage.style['height'] = '${height}px';
+    }
+  }
+}
+
+class Anchor extends Element {
+
+  String get _tagName => 'a';
+
+  static Anchor _emptyAnchor = new Anchor();
+
+  String href;
+
+  Anchor({
+    Object key,
+    List<Node> children,
+    Style style,
+    String inlineStyle,
+    sky.EventListener onClick,
+    sky.EventListener onFlingCancel,
+    sky.EventListener onFlingStart,
+    sky.EventListener onGestureTap,
+    sky.EventListener onPointerCancel,
+    sky.EventListener onPointerDown,
+    sky.EventListener onPointerMove,
+    sky.EventListener onPointerUp,
+    sky.EventListener onScrollEnd,
+    sky.EventListener onScrollStart,
+    sky.EventListener onScrollUpdate,
+    sky.EventListener onWheel,
+    this.width,
+    this.height,
+    this.href
+  }) : super(
+    key: key,
+    children: children,
+    style: style,
+    inlineStyle: inlineStyle,
+    onClick: onClick,
+    onFlingCancel: onFlingCancel,
+    onFlingStart: onFlingStart,
+    onGestureTap: onGestureTap,
+    onPointerCancel: onPointerCancel,
+    onPointerDown: onPointerDown,
+    onPointerMove: onPointerMove,
+    onPointerUp: onPointerUp,
+    onScrollEnd: onScrollEnd,
+    onScrollStart: onScrollStart,
+    onScrollUpdate: onScrollUpdate,
+    onWheel: onWheel
+  );
+
+  void _syncNode([Element old]) {
+    Anchor oldAnchor = old != null ? old as Anchor : _emptyAnchor;
+    super._syncNode(oldAnchor);
+
+    sky.HTMLAnchorElement skyAnchor = _root as sky.HTMLAnchorElement;
+    if (href != oldAnchor.href) {
+      skyAnchor.href = href;
+    }
   }
 }
 
