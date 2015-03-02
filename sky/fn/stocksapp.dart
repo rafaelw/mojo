@@ -18,6 +18,16 @@ class StocksApp extends App {
     font-size: 16px;'''
   );
 
+  static Style _iconStyle = new Style('''
+    padding: 8px;
+    margin: 0 4px;'''
+  );
+
+  static Style _titleStyle = new Style('''
+    flex: 1;
+    margin: 0 4px;'''
+  );
+
   StocksApp() : super();
 
   Node render() {
@@ -35,20 +45,24 @@ class StocksApp extends App {
         ),
         new MenuItem(
           key: 'Inbox',
+          icon: 'content/inbox',
           children: [new Text('Inbox')]
         ),
         new MenuDivider(
         ),
         new MenuItem(
           key: 'Drafts',
+          icon: 'content/drafts',
           children: [new Text('Drafts')]
         ),
         new MenuItem(
           key: 'Settings',
+          icon: 'action/settings',
           children: [new Text('Settings')]
         ),
         new MenuItem(
           key: 'Help & Feedback',
+          icon: 'action/help',
           children: [new Text('Help & Feedback')]
         )
       ]
@@ -56,11 +70,20 @@ class StocksApp extends App {
 
     var toolbar = new Toolbar(
       children: [
-        new Icon(key: 'menu', onClick: _drawerAnimation.toggle,
-                 size: 24, type: 'navigation/menu_white'),
-        new Text('I am a stocks app'),
-        new Icon(key: 'search', size: 24, type: 'action/search_white'),
-        new Icon(key: 'more_white', size: 24, type: 'navigation/more_vert_white')
+        new Icon(key: 'menu', style: _iconStyle,
+            onClick: _drawerAnimation.toggle,
+            size: 24,
+            type: 'navigation/menu_white'),
+        new Container(
+          style: _titleStyle,
+          children: [new Text('I am a stocks app')]
+        ),
+        new Icon(key: 'search', style: _iconStyle,
+            size: 24,
+            type: 'action/search_white'),
+        new Icon(key: 'more_white', style: _iconStyle,
+            size: 24,
+            type: 'navigation/more_vert_white')
       ]
     );
 

@@ -9,6 +9,10 @@ class MenuItem extends Component {
     -webkit-user-select: none;'''
   );
 
+  static Style _iconStyle = new Style('''
+    padding: 0px 16px;'''
+  );
+
   static Style _labelStyle = new Style('''
       font-family: 'Roboto Medium', 'Helvetica';
       color: #212121;
@@ -17,15 +21,19 @@ class MenuItem extends Component {
   );
 
   List<Node> children;
+  String icon;
 
-  MenuItem({ Object key, this.children }) : super(key: key);
+  MenuItem({ Object key, this.icon, this.children }) : super(key: key) {
+  }
 
   Node render() {
     return new Container(
       style: _style,
       children: [
         new Icon(
-          size: 24
+          style: _iconStyle,
+          size: 24,
+          type: "${icon}_grey600"
         ),
         new Container(
           style: _labelStyle,

@@ -7,7 +7,7 @@ class Toolbar extends Component {
   static Style _style = new Style('''
     display: flex;
     align-items: center;
-    height: 56px;
+    height: 84px;
     z-index: 1;
     background-color: #3F51B5;
     color: white;
