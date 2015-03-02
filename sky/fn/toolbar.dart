@@ -10,7 +10,8 @@ class Toolbar extends Component {
     height: 56px;
     z-index: 1;
     background-color: #3F51B5;
-    color: white;'''
+    color: white;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);'''
   );
 
   Toolbar({ String key, this.children }) : super(key:key);
