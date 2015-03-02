@@ -5,7 +5,22 @@ import 'dart:collection';
 import 'dart:async';
 import 'reflect.dart' as reflect;
 
-bool _debugCheckingEnabled = false;
+bool _checkedMode;
+
+bool debugWarnings() {
+  void testFn(double i) {}
+
+  if (_checkedMode == null) {
+    _checkedMode = false;
+    try {
+      testFn('not a double');
+    } catch (ex) {
+      _checkedMode = true;
+    }
+  }
+
+  return _checkedMode;
+}
 
 void parentInsertBefore(sky.ParentNode parent,
                         sky.Node node,
@@ -144,7 +159,7 @@ abstract class Element extends Node {
     _className = style == null ? '': style._className;
     _children = children == null ? _emptyList : children;
 
-    if (_debugCheckingEnabled) {
+    if (debugWarnings()) {
       _debugReportDuplicateIds();
     }
   }
@@ -160,16 +175,16 @@ abstract class Element extends Node {
   }
 
   void _debugReportDuplicateIds() {
-    var idMap = new HashMap<String, Node>();
+    var idSet = new HashSet<String>();
     for (var child in _children) {
       if (child is Text) {
         continue; // Text nodes all have the same key and are never reordered.
       }
 
-      bool didPut = false;
-      idMap.putIfAbsent(child._key, () { didPut = true; return child; });
-      // No two children of the same type can have the same key.
-      assert(didPut);
+      if (!idSet.add(child._key)) {
+        throw '''If multiple (non-Text) nodes of the same type exist as children
+                 of another node, they must have unique keys.''';
+      }
     }
   }
 
@@ -694,10 +709,9 @@ abstract class Component extends Node {
 
 abstract class App extends Component {
   sky.Node _host = null;
-  App({ bool devMode : false })
-    : super(key:'App', stateful: true) {
+  App()
+    : super(stateful: true) {
 
-    _debugCheckingEnabled = devMode;
     _host = sky.document.createElement('div');
     sky.document.appendChild(_host);
 
