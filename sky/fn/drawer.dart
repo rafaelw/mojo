@@ -149,7 +149,13 @@ class Drawer extends Component {
 
   double _position = -_kWidth;
 
-  void didMount() {
+  bool _listening = false;
+
+  void _ensureListening() {
+    if (_listening)
+      return;
+
+    _listening = true;
     onPositionChanged.listen((position) {
       setState(() {
         _position = position;
@@ -158,6 +164,8 @@ class Drawer extends Component {
   }
 
   Node render() {
+    _ensureListening();
+
     bool isClosed = _position <= -_kWidth;
     String inlineStyle = 'display: ${isClosed ? 'none' : ''}';
     String maskInlineStyle = 'opacity: ${(_position / _kWidth + 1) * 0.25}';

@@ -65,7 +65,24 @@ class InkSplash extends Component {
     : onStyleChanged = onStyleChanged,
       super(stateful: true, key: onStyleChanged.hashCode);
 
+  bool _listening = false;
+
+  void _ensureListening() {
+    if (_listening)
+      return;
+
+    _listening = true;
+
+    onStyleChanged.listen((style) {
+      setState(() {
+        _inlineStyle = style;
+      });
+    });
+  }
+
   Node render() {
+    _ensureListening();
+
     return new Container(
       key: "InkSplash",
       style: _style,
@@ -77,13 +94,5 @@ class InkSplash extends Component {
         )
       ]
     );
-  }
-
-  void didMount() {
-    onStyleChanged.listen((style) {
-      setState(() {
-        _inlineStyle = style;
-      });
-    });
   }
 }

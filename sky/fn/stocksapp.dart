@@ -8,7 +8,7 @@ import 'widgets.dart';
 
 class StocksApp extends App {
 
-  DrawerAnimation _drawerAnimation;
+  DrawerAnimation _drawerAnimation = new DrawerAnimation();
 
   static Style _style = new Style('''
     display: flex;
@@ -19,10 +19,6 @@ class StocksApp extends App {
   );
 
   StocksApp() : super();
-
-  void didMount() {
-    _drawerAnimation = new DrawerAnimation();
-  }
 
   Node render() {
     var drawer = new Drawer(
