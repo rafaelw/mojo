@@ -85,14 +85,14 @@ To handle an event is to receive a callback. All elements, (e.g. `Container`, `A
 ```JavaScript
 class MyComp extends Component {
   MyComp({
-    Object key
-    sky.EventListener onClick
+    Object key,
+    sky.EventListener onClick // delegated handler
   }) : super(key: key);
   
   Node render() {
     return new Container(
       onClick: onClick,
-      onScrollStart: _handleScroll
+      onScrollStart: _handleScroll // direct handler
     );
   }
 
