@@ -43,13 +43,13 @@ If you're familiar with React, the basic idea is the same: Application data flow
 
 Stateful vs. Stateless components
 ---------------------------------
-All components have access to two kinds of state: (1) data which is handing in from their owner (the component which constructed them) and (2) data which they mutate themselves. While react components have explicit property bags for these two kinds of state (`this.prop` and `this.state`), Effen maps these ideas to the public and private fields of the component. Constructor arguments should (by convention) be reflected as public fields of the component and state should only be set on private (with a leader underbar `_`) fields.
+All components have access to two kinds of state: (1) data which is handing in from their owner (the component which constructed them) and (2) data which they mutate themselves. While react components have explicit property bags for these two kinds of state (`this.prop` and `this.state`), Effen maps these ideas to the public and private fields of the component. Constructor arguments should (by convention) be reflected as public fields of the component and state should only be set on private (with a leading underbar `_`) fields.
 
 All nodes and most components should be stateless, never needing to mutate themselves and only reacting to data which is handed into them. Some components will be stateful. This state will likely encapsulate transient states of the UI, such as scroll position, animation state, uncommitted form values, etc...
 
-A component can become stateful in two ways: (1) by passing `super(stateful: true)` to its call to the superclasses constructor, or by calling `setState(Function fn)`. The former is a way to having a component start its life stateful, and the later results in the component becoming statefull *as well* as scheduling the component to re-render at the end of the current animation frame.
+A component can become stateful in two ways: (1) by passing `super(stateful: true)` to its call to the superclasses constructor, or by calling `setState(Function fn)`. The former is a way to having a component start its life stateful, and the later results in the component becoming statefull *as well as* scheduling the component to re-render at the end of the current animation frame.
 
-What does it mean to be stateful? It means that the diffing mechanism retains the specific *instance* of the component as long as it component which renders it continues require its precence. IOW, the private state of stateful components lives on as long as the component logically exists in the tree.
+What does it mean to be stateful? It means that the diffing mechanism retains the specific *instance* of the component as long as it component which renders it continues to require its precence. IOW, the private state of stateful components lives on as long as the component logically exists in the tree.
 
 Rendering
 ---------
