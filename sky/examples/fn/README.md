@@ -51,7 +51,7 @@ All nodes and most components should be stateless, never needing to mutate thems
 
 A component can become stateful in two ways: (1) by passing `super(stateful: true)` to its call to the superclasses constructor, or by calling `setState(Function fn)`. The former is a way to having a component start its life stateful, and the later results in the component becoming statefull *as well as* scheduling the component to re-render at the end of the current animation frame.
 
-What does it mean to be stateful? It means that the diffing mechanism retains the specific *instance* of the component as long as it component which renders it continues to require its precence. The component which constructed it may have provided new configuration in form of different values for the constructor parameters, but these values (public fields) will be copied (using reflection) on the retained instance whose privates fields are left unmolested.
+What does it mean to be stateful? It means that the diffing mechanism retains the specific *instance* of the component as long as the component which renders it continues to require its presence. The component which constructed it may have provided new configuration in form of different values for the constructor parameters, but these values (public fields) will be copied (using reflection) on the retained instance whose privates fields are left unmolested.
 
 Rendering
 ---------
