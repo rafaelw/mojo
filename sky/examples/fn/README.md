@@ -43,6 +43,19 @@ How to structure you app
 ------------------------
 If you're familiar with React, the basic idea is the same: Application data flows *down* from components which have data to components & nodes which they construct via construction parameters. Generally speaking, View-Model data (data which is derived from *model* data, but exists only because the view needs it), is computed during the course of `render` and is short-lived, being handed into nodes & components as configuration data.
 
+What does "data flowing down the tree" mean?
+--------------------------------------------
+Consider the case of a checkbox. (i.e. `widgets/checkbox.dart`). The `Checkbox` constructor looks like this:
+
+```JavaScript
+  ValueChanged onChanged;
+  bool checked;
+
+  Checkbox({ Object key, this.onChanged, this.checked }) : super(key: key);
+```
+
+What this means is that the `Checkbox` component is *never* "owns" the state of the checkbox. It's current state is handed into the `checked` parameter, and when a click occurs, the checkbox invokes its `onChanged` callback with the value it thinks it should be changed to -- but it never directly changes the value itself. This is a bit odd at first look, but if you think about it: a control isn't very useful unless it gets its value out to someone and if you think about databinding, the same thing happens: databinding basically tells a control to *treat some remote variable as its storage*. That's all that is happening here. In this case, some owning component probably has a set of values which describe a form.
+
 Stateful vs. Stateless components
 ---------------------------------
 All components have access to two kinds of state: (1) data which is handing in from their owner (the component which constructed them) and (2) data which they mutate themselves. While react components have explicit property bags for these two kinds of state (`this.prop` and `this.state`), Effen maps these ideas to the public and private fields of the component. Constructor arguments should (by convention) be reflected as public fields of the component and state should only be set on private (with a leading underbar `_`) fields.
