@@ -57,7 +57,7 @@ At the end of each animation frame, all components (including the root `App`) wh
 
 Keys
 ----
-In order to efficiently apply changes to the DOM and to ensure that stateful components are correctly identified, Effen requires that `no two nodes (except Text) or components of the same type may exist as children of another node without being distinguished by unique keys`. [`Text` is excused from this rule]. In many cases, nodes don't require a key because there is only one type amongst it's siblings, but if there is more one, you must assign each a key. This is why most nodes will take `({ Object key })` as an optional constructor parameter. In development mode (i.e. when sky is built `Debug`) Effen will throw an error if you forget to do this.
+In order to efficiently apply changes to the DOM and to ensure that stateful components are correctly identified, Effen requires that `no two nodes (except Text) or components of the same type may exist as children of another element without being distinguished by unique keys`. [`Text` is excused from this rule]. In many cases, nodes don't require a key because there is only one type amongst its siblings -- but if there is more one, you must assign each a key. This is why most nodes will take `({ Object key })` as an optional constructor parameter. In development mode (i.e. when sky is built `Debug`) Effen will throw an error if you forget to do this.
 
 Event Handling
 --------------
@@ -84,3 +84,12 @@ class MyComp extends Component {
   }
 }
 ```
+
+*Note: Only a subset of the events defined in sky are currently exposed on Element. If you need one which isn't present, feel free to post a patch which adds it.*
+
+Styling
+-------
+Styling is the part of Effen which is least designed and is likely to change. At the moment, there are two ways to apply style to an element: (1) by handing a `Style` object to the `style` constructor parameter, or by passing a `String` to the `inlineStyle` constructor parameter. Both take a string of CSS, but the construction of a `Style` object presently causes a new `<style />` element to be created at the document level which can quickly be applied to components by Effen setting their class -- which inlineStyle does what you would expect.
+
+`Style` objects are for most styling which is static and `inlineStyle`s are for styling which is dynamic (e.g. `display: ` or `transform: translate*()` which may change as a result of animating of transient UI state). 
+
