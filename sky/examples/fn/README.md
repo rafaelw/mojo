@@ -101,15 +101,16 @@ Animation is still an area of exploration. The pattern which is presently used i
 
 Performance
 -----------
-Isn't diffing the DOM expensive? This question comes up alot WRT React and there are few stock answers, one that not many people get and they one unique thing that Effen does.
+Isn't diffing the DOM expensive? This question comes up alot WRT React and there are few stock answers, one that not many people get and then one unique thing that Effen does.
 
-The stock answer is that diffing the DOM is fast because you compute the diff of the current VDOM from the previous VDOM and only apply the diffs to the actual DOM. The truth that this is fast, but not really fast enough for 60 of 120fps animations.
+The stock answer is that diffing the DOM is fast because you compute the diff of the current VDOM from the previous VDOM and only apply the diffs to the actual DOM. The truth that this is fast, but not really fast enough for 60 or 120fps animations.
 
-The answer that many people don't get is that there are really two logical types of renders: (1) When underlying model data changes: This generally requires handing in new data to the root component (in Effen, this means the `App` calling `setState` on itself). (2) When user interaction updates a control or an animation takes place. (1) is generally more expensive because it requires a full diff, but (2) tends to happen at nodes which are near the leafs of the tree, so the number of nodes which must be reconsiled is hopefully small.
+The answer that many people don't get is that there are really two logical types of renders: (1) When underlying model data changes: This generally requires handing in new data to the root component (in Effen, this means the `App` calling `setState` on itself). (2) When user interaction updates a control or an animation takes place. (1) is generally more expensive because it requires a full rendering & diff, but (2) tends to happen at nodes which are near the leafs of the tree, so the number of nodes which must be reconsiled is generally small.
 
 React provides a way to manually insist that a componet not re-render based on its old and new state (and they encourage the use of immutable data structures because discovering the data is the same can be accomplished with a reference comparison). A similar mechanism is in the works for Effen.
 
 Lastly, Effen does something unique: Because it's diffing is component-wise, it can be smart about not forcing the re-render of components which are handed in as *arguments* when only the component itself is dirty. For example, the `drawer.dart` component knows how to animate out & back and expose a content pane -- but it takes its content pane as an argument. When the animation mutates the inlineStyle of the `Drawer`'s `Container`, it must schedule itself for re-render -- but -- because the content was handed in to its constructor, its configuration can't have changed and Effen doesn't require it to re-render.
 
+It is a design goal that it should be *possible* to arrange that all render cycles which happen during animations can always complete in less than one milliesecond on a Nexus 5.
 
 
