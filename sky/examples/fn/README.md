@@ -5,6 +5,8 @@ Effen is a prototype of a functional-reactive framework for sky which takes insp
 
 Effen is comprised of three main parts: a virtual-dom and diffing engine, a component mechanism and a very early set of widgets for use in creating applications.
 
+If you just want to dive into code, see the `sky/examples/stocks-fn`.
+
 Hello World
 -----------
 
