@@ -1,7 +1,4 @@
-import 'fn.dart';
-import 'widgets.dart';
-import 'companylist.dart';
-import 'stockrow.dart';
+part of stocksapp;
 
 class Stocklist extends FixedHeightScrollable {
 

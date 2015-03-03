@@ -1,9 +1,9 @@
 library widgets;
 
+import '../lib/fn.dart';
 import 'dart:async';
 import 'dart:math' as math;
 import 'dart:sky' as sky;
-import 'fn.dart';
 
 part 'animationgenerator.dart';
 part 'box.dart';

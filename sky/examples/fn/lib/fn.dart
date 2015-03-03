@@ -1,8 +1,8 @@
 library fn;
 
-import 'dart:sky' as sky;
-import 'dart:collection';
 import 'dart:async';
+import 'dart:collection';
+import 'dart:sky' as sky;
 import 'reflect.dart' as reflect;
 
 bool _checkedMode;

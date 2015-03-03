@@ -1,10 +1,15 @@
-// Copyright (c) 2015, <your name>. All rights reserved. Use of this source code
-// is governed by a BSD-style license that can be found in the LICENSE file.
-import 'companylist.dart';
+library stocksapp;
+
+import '../fn/lib/fn.dart';
+import '../fn/widgets/widgets.dart';
+import 'dart:collection';
+import 'dart:math';
 import 'dart:sky' as sky;
-import 'fn.dart';
-import 'stocklist.dart';
-import 'widgets.dart';
+
+part 'companylist.dart';
+part 'stockarrow.dart';
+part 'stocklist.dart';
+part 'stockrow.dart';
 
 class StocksApp extends App {
 

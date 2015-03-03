@@ -1,6 +1,4 @@
-library companylist;
-
-import "dart:math";
+part of stocksapp;
 
 // Snapshot from http://www.nasdaq.com/screening/company-list.aspx
 // Fetched 2/23/2014.

@@ -1,9 +1,4 @@
-import 'companylist.dart';
-import 'dart:collection';
-import 'dart:sky' as sky;
-import 'fn.dart';
-import 'stockarrow.dart';
-import 'widgets.dart';
+part of stocksapp;
 
 class StockRow extends Component {
 

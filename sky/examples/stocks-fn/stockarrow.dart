@@ -1,5 +1,4 @@
-import 'fn.dart';
-import 'dart:math';
+part of stocksapp;
 
 class StockArrow extends Component {
 
