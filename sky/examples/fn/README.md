@@ -7,6 +7,10 @@ Effen is comprised of three main parts: a virtual-dom and diffing engine, a comp
 
 If you just want to dive into code, see the `sky/examples/stocks-fn`.
 
+Is this the official framework for Sky?
+---------------------------------------
+Nope, it's just an experiment. We're testing how well it works and how we like it.
+
 Hello World
 -----------
 
