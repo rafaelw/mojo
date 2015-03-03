@@ -89,7 +89,25 @@ class MyComp extends Component {
 
 Styling
 -------
-Styling is the part of Effen which is least designed and is likely to change. At the moment, there are two ways to apply style to an element: (1) by handing a `Style` object to the `style` constructor parameter, or by passing a `String` to the `inlineStyle` constructor parameter. Both take a string of CSS, but the construction of a `Style` object presently causes a new `<style />` element to be created at the document level which can quickly be applied to components by Effen setting their class -- which inlineStyle does what you would expect.
+Styling is the part of Effen which is least designed and is likely to change. At the moment, there are two ways to apply style to an element: (1) by handing a `Style` object to the `style` constructor parameter, or by passing a `String` to the `inlineStyle` constructor parameter. Both take a string of CSS, but the construction of a `Style` object presently causes a new `<style />` element to be created at the document level which can quickly be applied to components by Effen setting their class -- while inlineStyle does what you would expect.
 
-`Style` objects are for most styling which is static and `inlineStyle`s are for styling which is dynamic (e.g. `display: ` or `transform: translate*()` which may change as a result of animating of transient UI state). 
+`Style` objects are for most styling which is static and `inlineStyle`s are for styling which is dynamic (e.g. `display: ` or `transform: translate*()` which may change as a result of animating of transient UI state).
+
+Animation
+---------
+Animation is still an area of exploration. The pattern which is presently used in the `stocks-fn` example is the following: Components which are animatable should contain within their implementation file an Animation object whose job it is to react to events and control an animation by exposing one or more Dart `stream`s of data. The `Animation` object is owned by the owner (or someone even higher) and the stream is passed into the animating component via its constructor. The first time the component renders, it listens on the stream and calls `setState` on itself for each value which emerges from the stream [See the `drawer.dart` widget for an example].
+
+Performance
+-----------
+Isn't diffing the DOM expensive? This question comes up alot WRT React and there are few stock answers, one that not many people get and they one unique thing that Effen does.
+
+The stock answer is that diffing the DOM is fast because you compute the diff of the current VDOM from the previous VDOM and only apply the diffs to the actual DOM. The truth that this is fast, but not really fast enough for 60 of 120fps animations.
+
+The answer that many people don't get is that there are really two logical types of renders: (1) When underlying model data changes: This generally requires handing in new data to the root component (in Effen, this means the `App` calling `setState` on itself). (2) When user interaction updates a control or an animation takes place. (1) is generally more expensive because it requires a full diff, but (2) tends to happen at nodes which are near the leafs of the tree, so the number of nodes which must be reconsiled is hopefully small.
+
+React provides a way to manually insist that a componet not re-render based on its old and new state (and they encourage the use of immutable data structures because discovering the data is the same can be accomplished with a reference comparison). A similar mechanism is in the works for Effen.
+
+Lastly, Effen does something unique: Because it's diffing is component-wise, it can be smart about not forcing the re-render of components which are handed in as *arguments* when only the component itself is dirty. For example, the `drawer.dart` component knows how to animate out & back and expose a content pane -- but it takes its content pane as an argument. When the animation mutates the inlineStyle of the `Drawer`'s `Container`, it must schedule itself for re-render -- but -- because the content was handed in to its constructor, its configuration can't have changed and Effen doesn't require it to re-render.
+
+
 
