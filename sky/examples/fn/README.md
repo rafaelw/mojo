@@ -33,7 +33,7 @@ class HelloWorldApp extends App {
   }
 }
 ```
-An app is comprised of (and is, itself, a) components. A component's main job is to implement `Node render()`. The idea here is that the `render` method describes the DOM of a component at any given point during its lifetime. In this case, our `HelloWorldApp`'s `render` method just returns a `Text` node which prints the customary line of text.
+An app is comprised of (and is, itself, a) components. A component's main job is to implement `Node render()`. The idea here is that the `render` method describes the DOM of a component at any given point during its lifetime. In this case, our `HelloWorldApp`'s `render` method just returns a `Text` node which displays the obligatory line of text.
 
 Nodes
 -----
