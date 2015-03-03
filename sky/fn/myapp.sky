@@ -1,9 +1,0 @@
-#!mojo mojo:sky_viewer
-<sky>
-<script>
-import 'myapp.dart';
-main() {
-  new MyApp();
-}
-</script>
-</sky>
