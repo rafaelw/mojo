@@ -572,30 +572,24 @@ abstract class Component extends Node {
   bool _sync(Node old, sky.Node host, sky.Node insertBefore) {
     Component oldComponent = old as Component;
 
-    if (oldComponent == null || oldComponent == this) {
+    if (oldComponent == null || !oldComponent._stateful) {
+      if (oldComponent != null) {
+        _vdom = oldComponent._vdom;
+      }
+
       _buildInternal(host, insertBefore);
       return false;
     }
 
-    assert(oldComponent != null);
-    assert(_dirty);
-    assert(_vdom == null);
+    _stateful = false; // prevent iloop from _buildInternal below.
 
-    if (oldComponent._stateful) {
-      _stateful = false; // prevent iloop from _buildInternal below.
+    reflect.copyPublicFields(this, oldComponent);
 
-      reflect.copyPublicFields(this, oldComponent);
+    oldComponent._dirty = true;
+    _dirty = false;
 
-      oldComponent._dirty = true;
-      _dirty = false;
-
-      oldComponent._buildInternal(host, insertBefore);
-      return true;  // Must retain old component
-    }
-
-    _vdom = oldComponent._vdom;
-    _buildInternal(host, insertBefore);
-    return false;
+    oldComponent._buildInternal(host, insertBefore);
+    return true;  // Retain old component
   }
 
   void _buildInternal(sky.Node host, sky.Node insertBefore) {
