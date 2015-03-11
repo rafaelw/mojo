@@ -113,6 +113,7 @@ class Animation {
   StreamController _controller = new StreamController(sync: true);
 
   AnimationGenerator _animation;
+  Completer _completer;
 
   double _value;
 
@@ -128,15 +129,28 @@ class Animation {
     }
   }
 
-  void animateTo(double newValue, double duration,
+  void _animationComplete() {
+    _completer.complete();
+    _completer = null;
+  }
+
+  Future animateTo(double newValue, double duration,
       { Curve curve: linear, double initialDelay: 0.0 }) {
     stop();
+
+    if (newValue == _value || duration == 0.0) {
+      _setValue(_value);
+      var now = new DateTime.now().millisecondsSinceEpoch.toDouble();
+      return new Future.value();
+    }
 
     _animation = new AnimationGenerator(duration, begin: _value, end: newValue,
         curve: curve, initialDelay: initialDelay);
 
-    _animation.onTick.listen(_setValue, onDone: () {
-      _animation = null;
-    });
+    _completer = new Completer();
+
+    _animation.onTick.listen(_setValue, onDone: _animationComplete);
+
+    return _completer.future;
   }
 }

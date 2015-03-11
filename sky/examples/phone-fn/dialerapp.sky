@@ -1,0 +1,7 @@
+<script>
+import 'dialerapp.dart';
+
+void main() {
+  new DialerApp();
+}
+</script>

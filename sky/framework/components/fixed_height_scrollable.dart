@@ -12,29 +12,31 @@ abstract class FixedHeightScrollable extends Component {
   // it's explicitly sized or flexible or whatever...
   static final Style _style = new Style('''
     overflow: hidden;
-    position: relative;
-    flex: 1;
-    will-change: transform;'''
+    position: relative;'''
   );
 
   static final Style _scrollAreaStyle = new Style('''
-    position:relative;
-    will-change: transform;'''
+    position:relative;'''
   );
 
-  double minOffset;
-  double maxOffset;
+  int minItem;
+  int maxItem;
 
+  double _minOffset;
+  double _maxOffset;
   double _scrollOffset = 0.0;
   FlingCurve _flingCurve;
   int _flingAnimationId;
   double _height = 0.0;
   double _itemHeight;
 
+  Style style;
+
   FixedHeightScrollable({
     Object key,
-    this.minOffset,
-    this.maxOffset
+    this.minItem,
+    this.maxItem,
+    this.style
   }) : super(key: key) {
     events.listen('gestureflingstart', _handleFlingStart);
     events.listen('gestureflingcancel', _handleFlingCancel);
@@ -55,6 +57,13 @@ abstract class FixedHeightScrollable extends Component {
     setState(() {
       _height = scrollRect.height;
       _itemHeight = itemRect.height;
+
+      if (minItem != null) {
+        _minOffset = minItem * _itemHeight;
+      }
+      if (maxItem != null) {
+        _maxOffset = (maxItem - 1) * _itemHeight - _height;
+      }
     });
   }
 
@@ -78,7 +87,7 @@ abstract class FixedHeightScrollable extends Component {
     }
 
     return new Container(
-      styles: [_style],
+      styles: style != null ? [style, _style] : [_style],
       children: [
         new Container(
           styles: [_scrollAreaStyle],
@@ -95,10 +104,10 @@ abstract class FixedHeightScrollable extends Component {
 
   bool _scrollBy(double scrollDelta) {
     var newScrollOffset = _scrollOffset + scrollDelta;
-    if (minOffset != null && newScrollOffset < minOffset) {
-      newScrollOffset = minOffset;
-    } else if (maxOffset != null && newScrollOffset > maxOffset) {
-      newScrollOffset = maxOffset;
+    if (_minOffset != null && newScrollOffset < _minOffset) {
+      newScrollOffset = _minOffset;
+    } else if (_maxOffset != null && newScrollOffset > _maxOffset) {
+      newScrollOffset = _maxOffset;
     }
     if (newScrollOffset == _scrollOffset) {
       return false;

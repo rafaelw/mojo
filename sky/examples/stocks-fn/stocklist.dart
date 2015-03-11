@@ -6,9 +6,11 @@ class Stocklist extends FixedHeightScrollable {
 
   Stocklist({
     Object key,
-    this.stocks,
-    this.query
-  }) : super(key: key, minOffset: 0.0);
+    List<Stock> stocks,
+    this.query,
+    Style style
+  }) : this.stocks = stocks,
+       super(minItem: 0, maxItem: stocks.length, style: style);
 
   List<Node> buildItems(int start, int count) {
     return stocks
