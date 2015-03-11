@@ -7,7 +7,7 @@ import '../../framework/components/drawer_header.dart';
 import '../../framework/components/fixed_height_scrollable.dart';
 import '../../framework/components/floating_action_button.dart';
 import '../../framework/components/icon.dart';
-import '../../framework/components/input.dart';
+// import '../../framework/components/input.dart';
 import '../../framework/components/material.dart';
 import '../../framework/components/menu_divider.dart';
 import '../../framework/components/menu_item.dart';
@@ -96,12 +96,12 @@ class StocksApp extends App {
     );
 
     Node title;
-    if (_isSearching) {
-      title = new Input(focused: true, placeholder: 'Search stocks',
-          onChanged: _handleSearchQueryChanged);
-    } else {
+    // if (_isSearching) {
+    //   title = new Input(focused: true, placeholder: 'Search stocks',
+    //       onChanged: _handleSearchQueryChanged);
+    // } else {
       title = new Text('I am a stocks app');
-    }
+    // }
 
     var toolbar = new Toolbar(
       children: [

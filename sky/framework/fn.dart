@@ -80,8 +80,9 @@ void _parentInsertBefore(sky.ParentNode parent,
 }
 
 abstract class Node {
-  String _key = null;
-  sky.Node _root = null;
+  String _key;
+  Node _parent;
+  sky.Node _root;
 
   // TODO(abarth): Both Elements and Components have |events| but |Text|
   // doesn't. Should we add a common base class to contain |events|?
@@ -93,7 +94,10 @@ abstract class Node {
 
   // Return true IFF the old node has *become* the new node (should be
   // retained because it is stateful)
-  bool _sync(Node old, sky.ParentNode host, sky.Node insertBefore);
+  bool _sync(Node parent, Node old, sky.ParentNode host,
+      sky.Node insertBefore) {
+    _parent = parent;
+  }
 
   void _remove() {
     assert(_root != null);
@@ -111,7 +115,10 @@ class Text extends Node {
   // the data.
   Text(this.data) : super(key:'*text*');
 
-  bool _sync(Node old, sky.ParentNode host, sky.Node insertBefore) {
+  bool _sync(Node parent, Node old, sky.ParentNode host,
+      sky.Node insertBefore) {
+    super._sync(parent, old, host, insertBefore);
+
     if (old == null) {
       _root = new sky.Text(data);
       _parentInsertBefore(host, _root, insertBefore);
@@ -237,7 +244,10 @@ abstract class Element extends Node {
     }
   }
 
-  bool _sync(Node old, sky.ParentNode host, sky.Node insertBefore) {
+  bool _sync(Node parent, Node old, sky.ParentNode host,
+      sky.Node insertBefore) {
+    super._sync(parent, old, host, insertBefore);
+
     // print("---Syncing children of $_key");
 
     Element oldElement = old as Element;
@@ -250,7 +260,7 @@ abstract class Element extends Node {
       _syncNode();
 
       for (var child in _children) {
-        child._sync(null, _root, null);
+        child._sync(this, null, _root, null);
         assert(child._root is sky.Node);
       }
 
@@ -278,7 +288,7 @@ abstract class Element extends Node {
     Node oldNode = null;
 
     void sync(int atIndex) {
-      if (currentNode._sync(oldNode, root, nextSibling)) {
+      if (currentNode._sync(this, oldNode, root, nextSibling)) {
         // oldNode was stateful and must be retained.
         assert(oldNode != null);
         currentNode = oldNode;
@@ -569,7 +579,10 @@ abstract class Component extends Node {
   // needed to get sizing info.
   sky.Node getRoot() => _root;
 
-  bool _sync(Node old, sky.Node host, sky.Node insertBefore) {
+  bool _sync(Node parent, Node old, sky.ParentNode host,
+      sky.Node insertBefore) {
+    super._sync(parent, old, host, insertBefore);
+
     Component oldComponent = old as Component;
 
     if (oldComponent == null || !oldComponent._stateful) {
@@ -620,7 +633,7 @@ abstract class Component extends Node {
       oldRendered = null;
     }
 
-    if (_vdom._sync(oldRendered, host, insertBefore)) {
+    if (_vdom._sync(this, oldRendered, host, insertBefore)) {
       _vdom = oldRendered; // retain stateful component
     }
     _root = _vdom._root;
@@ -670,7 +683,7 @@ abstract class App extends Component {
     new Future.microtask(() {
       Stopwatch sw = new Stopwatch()..start();
 
-      _sync(null, _host, null);
+      _sync(null, null, _host, null);
       assert(_root is sky.Node);
 
       sw.stop();
