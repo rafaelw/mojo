@@ -58,8 +58,15 @@ class Checkbox extends ButtonBase {
   bool checked;
   ValueChanged onChanged;
 
-  Checkbox({ Object key, this.onChanged, this.checked }) : super(key: key) {
-    events.listen('click', _handleClick);
+  Checkbox({
+    Object key,
+    Events events,
+    this.onChanged,
+    this.checked
+  }) : super(key: key) {
+    this.events = new Events({
+      'click': _handleClick
+    }, events);
   }
 
   void _handleClick(sky.Event e) {

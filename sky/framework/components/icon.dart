@@ -14,10 +14,11 @@ class Icon extends Component {
 
   Icon({
     String key,
+    Events events,
     this.style,
     this.size,
     this.type: ''
-  }) : super(key: key);
+  }) : super(key: key, events: events);
 
   Node build() {
     String category = '';

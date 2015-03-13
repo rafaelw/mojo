@@ -47,17 +47,19 @@ class Radio extends ButtonBase {
 
   Radio({
     Object key,
+    Events events,
     this.onChanged,
     this.value,
     this.groupValue
-  }) : super(key: key) {
-    events.listen('click', _handleClick);
-  }
+  }) : super(key: key, events: events);
 
   Node build() {
     return new Material(
       style: highlight ? _highlightStyle : _style,
-      children: value == groupValue ? [new Container(style: _dotStyle )] : []
+      children: value == groupValue ? [new Container(style: _dotStyle )] : [],
+      events: new Events({
+        'click': _handleClick
+      })
     );
   }
 

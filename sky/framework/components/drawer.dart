@@ -112,15 +112,11 @@ class Drawer extends Component {
 
   Drawer({
     Object key,
+    Events events,
     this.animation,
     this.children,
     this.level: 0
-  }) : super(key: key) {
-    events.listen('pointerdown', animation.handlePointerDown);
-    events.listen('pointermove', animation.handlePointerMove);
-    events.listen('pointerup', animation.handlePointerUp);
-    events.listen('pointercancel', animation.handlePointerCancel);
-  }
+  }) : super(key: key, events: events);
 
   double _position = -_kWidth;
 
@@ -149,9 +145,12 @@ class Drawer extends Component {
     Container mask = new Container(
       key: 'Mask',
       style: _maskStyle,
-      inlineStyle: maskInlineStyle
-    )..events.listen('gesturetap', animation.handleMaskTap)
-     ..events.listen('gestureflingstart', animation.handleFlingStart);
+      inlineStyle: maskInlineStyle,
+      events: new Events({
+        'gesturetap': animation.handleMaskTap,
+        'gestureflingstart': animation.handleFlingStart
+      })
+    );
 
     Material content = new Material(
       key: 'Content',
@@ -164,7 +163,13 @@ class Drawer extends Component {
     return new Container(
       style: _style,
       inlineStyle: inlineStyle,
-      children: [ mask, content ]
+      children: [ mask, content ],
+      events: new Events({
+        'pointerdown': animation.handlePointerDown,
+        'pointermove': animation.handlePointerMove,
+        'pointerup': animation.handlePointerUp,
+        'pointercancel': animation.handlePointerCancel
+      })
     );
   }
 }

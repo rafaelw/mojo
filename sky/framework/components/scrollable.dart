@@ -24,14 +24,16 @@ abstract class Scrollable extends Component {
   double _scrollOffset = 0.0;
   Simulation _simulation;
 
-  Scrollable({Object key, this.scrollBehavior}) : super(key: key) {
-    events.listen('pointerdown', _handlePointerDown);
-    events.listen('pointerup', _handlePointerUpOrCancel);
-    events.listen('pointercancel', _handlePointerUpOrCancel);
-    events.listen('gestureflingstart', _handleFlingStart);
-    events.listen('gestureflingcancel', _handleFlingCancel);
-    events.listen('gesturescrollupdate', _handleScrollUpdate);
-    events.listen('wheel', _handleWheel);
+  Scrollable({Object key, Events events, this.scrollBehavior}) : super(key: key) {
+    this.events = new Events({
+      'pointerdown': _handlePointerDown,
+      'pointerup': _handlePointerUpOrCancel,
+      'pointercancel': _handlePointerUpOrCancel,
+      'gestureflingstart': _handleFlingStart,
+      'gestureflingcancel': _handleFlingCancel,
+      'gesturescrollupdate': _handleScrollUpdate,
+      'wheel': _handleWheel
+    }, events);
   }
 
   void didUnmount() {

@@ -36,14 +36,11 @@ class Material extends Component {
 
   Material({
       Object key,
+      Events events,
       this.style,
       this.inlineStyle,
       this.children,
-      this.level: 0 }) : super(key: key) {
-    events.listen('gesturescrollstart', _cancelSplashes);
-    events.listen('wheel', _cancelSplashes);
-    events.listen('pointerdown', _startSplash);
-  }
+      this.level: 0 }) : super(key: key, events: events);
 
   Node build() {
     List<Node> childrenIncludingSplashes = [];
@@ -64,7 +61,13 @@ class Material extends Component {
         key: 'Material',
         style: level > 0 ? style.extend(shadowStyle[level]) : style,
         inlineStyle: inlineStyle,
-        children: childrenIncludingSplashes
+        children: childrenIncludingSplashes,
+        events: new Events({
+          'gesturescrollstart': _cancelSplashes,
+          'wheel': _cancelSplashes,
+          'pointerdown':_startSplash
+        }
+      )
     );
   }
 

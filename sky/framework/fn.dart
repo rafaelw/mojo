@@ -20,27 +20,7 @@ bool _initIsInCheckedMode() {
 }
 
 final bool _isInCheckedMode = _initIsInCheckedMode();
-final bool _shouldLogRenderDuration = false;
-
-class EventHandler {
-  final String type;
-  final sky.EventListener listener;
-
-  EventHandler(this.type, this.listener);
-}
-
-class EventMap {
-  final List<EventHandler> _handlers = new List<EventHandler>();
-
-  void listen(String type, sky.EventListener listener) {
-    assert(listener != null);
-    _handlers.add(new EventHandler(type, listener));
-  }
-
-  void addAll(EventMap events) {
-    _handlers.addAll(events._handlers);
-  }
-}
+final bool _shouldLogRenderDuration = true;
 
 class Style {
   final String _className;
@@ -87,9 +67,9 @@ abstract class Node {
   sky.Node _root;
   bool _defunct = false;
 
-  // TODO(abarth): Both Elements and Components have |events| but |Text|
-  // doesn't. Should we add a common base class to contain |events|?
-  final EventMap events = new EventMap();
+  static Map<sky.Node, Node> _nodeMap = new HashMap<sky.Node, Node>();
+
+  static Node _getMounted(sky.Node node) => _nodeMap[node];
 
   Node({ Object key }) {
     _key = key == null ? "$runtimeType" : "$runtimeType-$key";
@@ -108,7 +88,13 @@ abstract class Node {
 
     _parentInsertBefore(host, node._root, insertBefore);
 
-    _syncNode(node);
+    // TODO(rafaelw): This needs another refactor. The API to _syncNode is
+    // strange becaue only Component is allowed to return true and Component
+    // is expected to override _mount() and not call through this method.
+    assert(this is! Component);
+    assert(!_syncNode(node));
+
+    _nodeMap[_root] = this;
   }
 
   bool _sync(Node old, Node parent, sky.ParentNode host,
@@ -167,9 +153,74 @@ class Text extends Node {
   }
 }
 
+Set<String> _registeredEvents = new HashSet<String>();
+
+void _dispatchEvent(sky.Event e) {
+  print('dispatch event: ${e.type}');
+  Node target = Node._getMounted(e.target);
+
+  // TODO(rafaelw): StopPropagation?
+  while (target != null) {
+    print ('target: ${target._key}');
+    if (target is EventTarget) {
+      target._handleEvent(e);
+    }
+
+    target = target._parent;
+  }
+}
+
+void _ensureDocListener(String eventType) {
+  if (_registeredEvents.add(eventType)) {
+    print('ensure $eventType');
+    sky.document.addEventListener(eventType, _dispatchEvent);
+  }
+}
+
+class Events {
+  final Map<String, sky.EventListener> listeners;
+  final Events next;
+  const Events(this.listeners, [this.next]);
+}
+
+abstract class EventTarget extends Node {
+
+  // TODO(rafaelw): Make this final.
+  Events events;
+
+  EventTarget({ Object key, this.events }) : super(key: key);
+
+  bool _syncNode(Node old) {
+    super._syncNode(old);
+
+    Events events = this.events;
+    while (events != null) {
+      for (String type in events.listeners.keys) {
+        _ensureDocListener(type);
+      }
+
+      events = events.next;
+    }
+
+    return false;
+  }
+
+  void _handleEvent(sky.Event e) {
+    Events events = this.events;
+    while (events != null) {
+      sky.EventListener listener = events.listeners[e.type];
+      if (listener != null) {
+        listener(e);
+      }
+
+      events = events.next;
+    }
+  }
+}
+
 final List<Node> _emptyList = new List<Node>();
 
-abstract class Element extends Node {
+abstract class Element extends EventTarget {
 
   String get _tagName;
 
@@ -182,12 +233,13 @@ abstract class Element extends Node {
 
   Element({
     Object key,
+    Events events,
     List<Node> children,
     Style style,
     this.inlineStyle
   }) : _class = style == null ? '' : style._className,
        _children = children == null ? _emptyList : children,
-       super(key:key) {
+       super(key: key, events: events) {
 
     if (_isInCheckedMode) {
       _debugReportDuplicateIds();
@@ -217,57 +269,11 @@ abstract class Element extends Node {
     }
   }
 
-  void _syncEvents([Element old]) {
-    List<EventHandler> newHandlers = events._handlers;
-    int newStartIndex = 0;
-    int newEndIndex = newHandlers.length;
-
-    List<EventHandler> oldHandlers = old.events._handlers;
-    int oldStartIndex = 0;
-    int oldEndIndex = oldHandlers.length;
-
-    // Skip over leading handlers that match.
-    while (newStartIndex < newEndIndex && oldStartIndex < oldEndIndex) {
-      EventHandler newHandler = newHandlers[newStartIndex];
-      EventHandler oldHandler = oldHandlers[oldStartIndex];
-      if (newHandler.type != oldHandler.type
-          || newHandler.listener != oldHandler.listener)
-        break;
-      ++newStartIndex;
-      ++oldStartIndex;
-    }
-
-    // Skip over trailing handlers that match.
-    while (newStartIndex < newEndIndex && oldStartIndex < oldEndIndex) {
-      EventHandler newHandler = newHandlers[newEndIndex - 1];
-      EventHandler oldHandler = oldHandlers[oldEndIndex - 1];
-      if (newHandler.type != oldHandler.type
-          || newHandler.listener != oldHandler.listener)
-        break;
-      --newEndIndex;
-      --oldEndIndex;
-    }
-
-    sky.Element root = _root as sky.Element;
-
-    for (int i = oldStartIndex; i < oldEndIndex; ++i) {
-      EventHandler oldHandler = oldHandlers[i];
-      root.removeEventListener(oldHandler.type, oldHandler.listener);
-    }
-
-    for (int i = newStartIndex; i < newEndIndex; ++i) {
-      EventHandler newHandler = newHandlers[i];
-      root.addEventListener(newHandler.type, newHandler.listener);
-    }
-  }
-
   bool _syncNode(Node old) {
     super._syncNode(old);
 
     Element oldElement = old as Element;
     sky.Element root = _root as sky.Element;
-
-    _syncEvents(oldElement);
 
     if (_class != oldElement._class)
       root.setAttribute('class', _class);
@@ -428,11 +434,13 @@ class Container extends Element {
 
   Container({
     Object key,
+    Events events,
     List<Node> children,
     Style style,
     String inlineStyle
   }) : super(
     key: key,
+    events: events,
     children: children,
     style: style,
     inlineStyle: inlineStyle
@@ -453,6 +461,7 @@ class Image extends Element {
 
   Image({
     Object key,
+    Events events,
     List<Node> children,
     Style style,
     String inlineStyle,
@@ -461,6 +470,7 @@ class Image extends Element {
     this.src
   }) : super(
     key: key,
+    events: events,
     children: children,
     style: style,
     inlineStyle: inlineStyle
@@ -499,6 +509,7 @@ class Anchor extends Element {
 
   Anchor({
     Object key,
+    Events events,
     List<Node> children,
     Style style,
     String inlineStyle,
@@ -507,6 +518,7 @@ class Anchor extends Element {
     this.href
   }) : super(
     key: key,
+    events: events,
     children: children,
     style: style,
     inlineStyle: inlineStyle
@@ -560,7 +572,7 @@ void _scheduleComponentForRender(Component c) {
   }
 }
 
-abstract class Component extends Node {
+abstract class Component extends EventTarget {
   bool _dirty = true; // components begin dirty because they haven't built.
   Node _vdom = null;
   final int _order;
@@ -568,10 +580,13 @@ abstract class Component extends Node {
   bool _stateful;
   static Component _currentlyRendering;
 
-  Component({ Object key, bool stateful })
-      : _stateful = stateful != null ? stateful : false,
-        _order = _currentOrder + 1,
-        super(key:key);
+  Component({
+    Object key,
+    Events events,
+    bool stateful
+  }) : _stateful = stateful != null ? stateful : false,
+       _order = _currentOrder + 1,
+       super(key: key, events: events);
 
   void didMount() {}
   void didUnmount() {}
@@ -635,8 +650,6 @@ abstract class Component extends Node {
     _vdom = build();
     _currentlyRendering = null;
     _currentOrder = lastOrder;
-
-    _vdom.events.addAll(events);
 
     _dirty = false;
 

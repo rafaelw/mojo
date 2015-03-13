@@ -7,10 +7,12 @@ import '../fn.dart';
 abstract class ButtonBase extends Component {
   bool highlight = false;
 
-  ButtonBase({ Object key }) : super(key: key) {
-    events.listen('pointerdown', _handlePointerDown);
-    events.listen('pointerup', _handlePointerUp);
-    events.listen('pointercancel', _handlePointerCancel);
+  ButtonBase({ Object key, Events events }) : super(key: key) {
+    this.events = new Events({
+      'pointerdown': _handlePointerDown,
+      'pointerup': _handlePointerUp,
+      'pointercancel': _handlePointerCancel
+    }, events);
   }
 
   void _handlePointerDown(_) {

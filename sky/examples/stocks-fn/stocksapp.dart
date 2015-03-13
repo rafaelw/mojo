@@ -7,7 +7,7 @@ import '../../framework/components/drawer_header.dart';
 import '../../framework/components/fixed_height_scrollable.dart';
 import '../../framework/components/floating_action_button.dart';
 import '../../framework/components/icon.dart';
-import '../../framework/components/input.dart';
+// import '../../framework/components/input.dart';
 import '../../framework/components/material.dart';
 import '../../framework/components/menu_divider.dart';
 import '../../framework/components/menu_item.dart';
@@ -96,8 +96,8 @@ class StocksApp extends App {
 
     Node title;
     if (_isSearching) {
-      title = new Input(focused: true, placeholder: 'Search stocks',
-          onChanged: _handleSearchQueryChanged);
+      // title = new Input(focused: true, placeholder: 'Search stocks',
+      //     onChanged: _handleSearchQueryChanged);
     } else {
       title = new Text('I am a stocks app');
     }
@@ -106,16 +106,22 @@ class StocksApp extends App {
       children: [
         new Icon(key: 'menu', style: _iconStyle,
             size: 24,
-            type: 'navigation/menu_white')
-          ..events.listen('click', _drawerAnimation.toggle),
+            type: 'navigation/menu_white',
+            events: new Events({
+              'click': _drawerAnimation.toggle
+            })
+        ),
         new Container(
           style: _titleStyle,
           children: [title]
         ),
         new Icon(key: 'search', style: _iconStyle,
             size: 24,
-            type: 'action/search_white')
-          ..events.listen('click', _handleSearchClick),
+            type: 'action/search_white',
+            events: new Events({
+              'click': _handleSearchClick
+            })
+        ),
         new Icon(key: 'more_white', style: _iconStyle,
             size: 24,
             type: 'navigation/more_vert_white')
