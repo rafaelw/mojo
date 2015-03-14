@@ -81,11 +81,14 @@ void _parentInsertBefore(sky.ParentNode parent,
   }
 }
 
+/*
+ * All Effen nodes derive from Node. All nodes have a _parent, a _key and
+ * can be sync'd.
+ */
 abstract class Node {
   String _key;
   Node _parent;
   sky.Node _root;
-  bool _defunct = false;
 
   // TODO(abarth): Both Elements and Components have |events| but |Text|
   // doesn't. Should we add a common base class to contain |events|?
@@ -95,52 +98,74 @@ abstract class Node {
     _key = key == null ? "$runtimeType" : "$runtimeType-$key";
   }
 
-  Node get _emptyNode;
+  bool _willSync(Node old) => false;
+
+  void _sync(Node old, sky.ParentNode host, sky.Node insertBefore);
+
+  void _remove();
+
+  Node _syncChild(Node node, Node oldNode, sky.ParentNode host,
+      sky.Node insertBefore) {
+    if (node == oldNode)
+      return node; // Nothing to do. Subtrees must be identical.
+
+    // TODO(rafaelw): This eagerly removes the old DOM. It may be that a
+    // new component was built that could re-use some of it. Consider
+    // syncing the new VDOM against the old one.
+    if (oldNode != null && node._key != oldNode._key) {
+      oldNode._remove();
+      oldNode = null;
+    }
+
+    if (node._willSync(oldNode)) {
+      oldNode._sync(node, host, insertBefore);
+      assert(oldNode._root is sky.Node);
+      return oldNode;
+    }
+
+    node._parent = this;
+    node._sync(oldNode, host, insertBefore);
+    assert(node._root is sky.Node);
+    return node;
+  }
+}
+
+/*
+ * RenderNodes correspond to a desired state of a sky.Node. They are fully
+ * immutable, with one exception: A Node which is a Component which lives within
+ * an Element's children list, may be replaced with the "old" instance if it
+ * has become stateful.
+ */
+abstract class RenderNode extends Node {
+
+  RenderNode({ Object key }) : super(key: key);
+
+  RenderNode get _emptyNode;
 
   sky.Node _createNode();
 
-  void _mount(Node parent, sky.ParentNode host, sky.Node insertBefore) {
-    var node = _emptyNode;
-    node._parent = parent;
-
-    node._root = _createNode();
-    assert(node._root != null);
-
-    _parentInsertBefore(host, node._root, insertBefore);
-
-    _syncNode(node);
-  }
-
-  bool _sync(Node old, Node parent, sky.ParentNode host,
-      sky.Node insertBefore) {
-
+  void _sync(Node old, sky.ParentNode host, sky.Node insertBefore) {
     if (old == null) {
-      _mount(parent, host, insertBefore);
-      return false;
+      _root = _createNode();
+      _parentInsertBefore(host, _root, insertBefore);
+      old = _emptyNode;
+    } else {
+      _root = old._root;
     }
 
-    return _syncNode(old);
+    _syncNode(old);
   }
 
-  // Return true IFF the old node has *become* the new node (should be
-  // retained because it is stateful)
-  bool _syncNode(Node old) {
-    assert(!old._defunct);
-    _root = old._root;
-    _parent = old._parent;
-    return false;
-  }
+  void _syncNode(RenderNode old);
 
-  void _unmount() {
+  void _remove() {
     assert(_root != null);
-    _parent = null;
     _root.remove();
-    _defunct = true;
     _root = null;
   }
 }
 
-class Text extends Node {
+class Text extends RenderNode {
   final String data;
 
   // Text nodes are special cases of having non-unique keys (which don't need
@@ -151,25 +176,23 @@ class Text extends Node {
 
   static Text _emptyText = new Text(null);
 
-  Node get _emptyNode => _emptyText;
+  RenderNode get _emptyNode => _emptyText;
 
   sky.Node _createNode() {
     return new sky.Text(data);
   }
 
-  bool _syncNode(Node old) {
-    super._syncNode(old);
+  void _syncNode(RenderNode old) {
     if (old == _emptyText)
-      return false; // we set inside _createNode();
+      return; // we set inside _createNode();
 
     (_root as sky.Text).data = data;
-    return false;
   }
 }
 
 final List<Node> _emptyList = new List<Node>();
 
-abstract class Element extends Node {
+abstract class Element extends RenderNode {
 
   String get _tagName;
 
@@ -194,11 +217,11 @@ abstract class Element extends Node {
     }
   }
 
-  void _unmount() {
-    super._unmount();
+  void _remove() {
+    super._remove();
     if (_children != null) {
       for (var child in _children) {
-        child._unmount();
+        child._remove();
       }
     }
   }
@@ -261,9 +284,7 @@ abstract class Element extends Node {
     }
   }
 
-  bool _syncNode(Node old) {
-    super._syncNode(old);
-
+  void _syncNode(RenderNode old) {
     Element oldElement = old as Element;
     sky.Element root = _root as sky.Element;
 
@@ -276,8 +297,6 @@ abstract class Element extends Node {
       root.setAttribute('style', inlineStyle);
 
     _syncChildren(oldElement);
-
-    return false;
   }
 
   void _syncChildren(Element oldElement) {
@@ -297,13 +316,7 @@ abstract class Element extends Node {
     Node oldNode = null;
 
     void sync(int atIndex) {
-      if (currentNode._sync(oldNode, this, _root, nextSibling)) {
-        // oldNode was stateful and must be retained.
-        currentNode = oldNode;
-        _children[atIndex] = currentNode;
-      }
-
-      assert(currentNode._root is sky.Node);
+      _children[atIndex] = _syncChild(currentNode, oldNode, _root, nextSibling);
     }
 
     // Scan backwards from end of list while nodes can be directly synced
@@ -412,7 +425,7 @@ abstract class Element extends Node {
     while (oldStartIndex < oldEndIndex) {
       oldNode = oldChildren[oldStartIndex];
       // print('> ${oldNode._key} removing from $oldEndIndex');
-      oldNode._unmount();
+      oldNode._remove();
       advanceOldStartIndex();
     }
   }
@@ -424,7 +437,7 @@ class Container extends Element {
 
   static final Container _emptyContainer = new Container();
 
-  Node get _emptyNode => _emptyContainer;
+  RenderNode get _emptyNode => _emptyContainer;
 
   Container({
     Object key,
@@ -445,11 +458,11 @@ class Image extends Element {
 
   static final Image _emptyImage = new Image();
 
-  Node get _emptyNode => _emptyImage;
+  RenderNode get _emptyNode => _emptyImage;
 
-  String src;
-  int width;
-  int height;
+  final String src;
+  final int width;
+  final int height;
 
   Image({
     Object key,
@@ -466,7 +479,7 @@ class Image extends Element {
     inlineStyle: inlineStyle
   );
 
-  bool _syncNode(Node old) {
+  void _syncNode(Node old) {
     super._syncNode(old);
 
     Image oldImage = old as Image;
@@ -480,8 +493,6 @@ class Image extends Element {
 
     if (height != oldImage.height)
       skyImage.style['height'] = '${height}px';
-
-    return false;
   }
 }
 
@@ -493,9 +504,9 @@ class Anchor extends Element {
 
   Node get _emptyNode => _emptyAnchor;
 
-  String href;
-  int width;
-  int height;
+  final String href;
+  final int width;
+  final int height;
 
   Anchor({
     Object key,
@@ -512,7 +523,7 @@ class Anchor extends Element {
     inlineStyle: inlineStyle
   );
 
-  bool _syncNode(Node old) {
+  void _syncNode(Node old) {
     super._syncNode(old);
 
     Anchor oldAnchor = old as Anchor;
@@ -520,8 +531,6 @@ class Anchor extends Element {
 
     if (href != oldAnchor.href)
       skyAnchor.href = href;
-
-    return false;
   }
 }
 
@@ -561,12 +570,16 @@ void _scheduleComponentForRender(Component c) {
 }
 
 abstract class Component extends Node {
-  bool _dirty = true; // components begin dirty because they haven't built.
-  Node _vdom = null;
+  bool get _dirty => _built == null;
+  bool get _isBuilding => _currentlyBuilding == this;
+
+  Node _built;
+  Node _oldBuilt;
   final int _order;
   static int _currentOrder = 0;
   bool _stateful;
-  static Component _currentlyRendering;
+  static Component _currentlyBuilding;
+  bool _defunct = false;
 
   Component({ Object key, bool stateful })
       : _stateful = stateful != null ? stateful : false,
@@ -580,113 +593,76 @@ abstract class Component extends Node {
   // needed to get sizing info.
   sky.Node getRoot() => _root;
 
-  void _mount(Node parent, sky.ParentNode host, sky.Node insertBefore) {
-    _parent = parent;
-
-    _syncInternal(host, insertBefore);
-
-    didMount();
-  }
-
-  void _unmount() {
-    assert(_vdom != null);
+  void _remove() {
+    assert(_built != null);
     assert(_root != null);
-    _vdom._unmount();
-    _vdom = null;
+    _built._remove();
+    _built = null;
     _root = null;
-    _parent = null;
     _defunct = true;
     didUnmount();
   }
 
-  bool _syncNode(Node old) {
+  bool _willSync(Node old) {
     Component oldComponent = old as Component;
-
-    if (!oldComponent._stateful) {
-      _vdom = oldComponent._vdom;
-      _syncInternal();
-
+    if (oldComponent == null || !oldComponent._stateful)
       return false;
-    }
 
-    _stateful = false; // prevent iloop from _syncInternal below.
+    // Make |this| the "old" Component
+    _stateful = false;
+    _built = oldComponent._built;
 
+    // Make |oldComponent| the "new" component
     reflect.copyPublicFields(this, oldComponent);
+    oldComponent._built = null;
 
-    oldComponent._dirty = true;
-    _dirty = false;
-
-    oldComponent._syncInternal();
-    return true;  // Retain old component
+    return true;
   }
 
-  void _syncInternal([sky.Node host, sky.Node insertBefore]) {
-    if (!_dirty) {
-      assert(_vdom != null);
-      return;
+  void _sync(Node old, sky.ParentNode host, sky.Node insertBefore) {
+    assert(_built == null);
+
+    Component oldComponent = old as Component;
+
+    if (oldComponent != null) {
+      _oldBuilt = oldComponent._built;
+      oldComponent._defunct = true;
     }
 
-    var oldRendered = _vdom;
-    bool mounting = oldRendered == null;
-
+    bool willMount = _oldBuilt == null;
     int lastOrder = _currentOrder;
     _currentOrder = _order;
-    _currentlyRendering = this;
-    _vdom = build();
-    _currentlyRendering = null;
+    _currentlyBuilding = this;
+    _built = build();
+    _currentlyBuilding = null;
     _currentOrder = lastOrder;
+    _built = _syncChild(_built, _oldBuilt, host, insertBefore);
+	_built.events.addAll(events);
+    _root = _built._root;
 
-    _vdom.events.addAll(events);
-
-    _dirty = false;
-
-    // TODO(rafaelw): This eagerly removes the old DOM. It may be that a
-    // new component was built that could re-use some of it. Consider
-    // syncing the new VDOM against the old one.
-    if (oldRendered != null &&
-        _vdom.runtimeType != oldRendered.runtimeType) {
-      var oldRoot = oldRendered._root;
-      host = oldRoot.parentNode;
-      insertBefore = oldRoot.nextSibling;
-      oldRendered._unmount();
-      oldRendered = null;
-    }
-
-    if (_vdom._sync(oldRendered, this, host, insertBefore)) {
-      _vdom = oldRendered; // retain stateful component
-    }
-
-    _root = _vdom._root;
-    assert(_vdom._root is sky.Node);
-
-    if (mounting) {
+    if (willMount)
       didMount();
-    }
   }
 
   void _buildIfDirty() {
-    if (_defunct)
+    if (_defunct || !_dirty)
       return;
 
-    assert(_vdom != null);
-
-    var vdom = _vdom;
-    while (vdom is Component) {
-      vdom = vdom._vdom;
-    }
-
-    assert(vdom._root != null);
-    _syncInternal();
+    assert(_root != null);
+    _sync(null, _root.parentNode, _root.nextSibling);
   }
 
   void setState(Function fn()) {
-    assert(_vdom != null || _defunct); // cannot setState before mounting.
+    assert(!_dirty || _defunct); // cannot setState before mounting.
     _stateful = true;
     fn();
-    if (!_defunct && _currentlyRendering != this) {
-      _dirty = true;
-      _scheduleComponentForRender(this);
-    }
+    if (_defunct || _dirty || _isBuilding)
+      return;
+
+    assert(_oldBuilt == null);
+    _oldBuilt = _built;
+    _built = null;
+    _scheduleComponentForRender(this);
   }
 
   Node build();
@@ -701,7 +677,7 @@ abstract class App extends Component {
     new Future.microtask(() {
       Stopwatch sw = new Stopwatch()..start();
 
-      _mount(null, _host, null);
+      _sync(null, _host, null);
       assert(_root is sky.Node);
 
       sw.stop();
