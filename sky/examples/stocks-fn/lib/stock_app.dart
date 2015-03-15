@@ -1,4 +1,4 @@
-// Copyright 2015 The Chromium Authors. All rights reserved.
+s// Copyright 2015 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -109,22 +109,28 @@ class StocksApp extends App {
 
     var toolbar = new ActionBar(
       children: [
-        new Icon(key: 'menu', style: _iconStyle,
-            size: 24,
-            type: 'navigation/menu_white')
-          ..events.listen('gesturetap', _DrawerController.toggle),
+        new GestureEvents(
+          new Icon(key: 'menu', style: _iconStyle,
+              size: 24,
+              type: 'navigation/menu_white'),
+          onTap: _DrawerController.toggle
+        ),
         new Container(
           style: _titleStyle,
           children: [title]
         ),
-        new Icon(key: 'search', style: _iconStyle,
-            size: 24,
-            type: 'action/search_white')
-          ..events.listen('gesturetap', _handleSearchClick),
-        new Icon(key: 'more_white', style: _iconStyle,
-            size: 24,
-            type: 'navigation/more_vert_white')
-          ..events.listen('gesturetap', _handleMenuClick),
+        new GestureEvents(
+          new Icon(key: 'search', style: _iconStyle,
+              size: 24,
+              type: 'action/search_white'),
+          onTap: _handleSearchClick
+        ),
+        new GestureEvents(
+          new Icon(key: 'more_white', style: _iconStyle,
+              size: 24,
+              type: 'navigation/more_vert_white'),
+          onTap: _handleMenuClick
+        )
       ]
     );
 
@@ -144,7 +150,7 @@ class StocksApp extends App {
     ];
 
     if (_isShowingMenu) {
-      children.add(new StockMenu()..events.listen('gesturetap', (_) {
+      children.add(new GestureEvents(new StockMenu(), onTap: (_) {
         setState(() {
           _isShowingMenu = false;
         });

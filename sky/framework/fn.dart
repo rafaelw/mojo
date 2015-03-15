@@ -193,6 +193,11 @@ abstract class Node {
  */
 abstract class RenderNode extends Node {
 
+  static Map<sky.Node, RenderNode> _nodeMap =
+      new HashMap<sky.Node, RenderNode>();
+
+  static RenderNode _getMounted(sky.Node node) => _nodeMap[node];
+
   RenderNode({ Object key }) : super(key: key);
 
   RenderNode get _emptyNode;
@@ -203,6 +208,7 @@ abstract class RenderNode extends Node {
     if (old == null) {
       _root = _createNode();
       _parentInsertBefore(host, _root, insertBefore);
+      _nodeMap[_root] = this;
       old = _emptyNode;
     } else {
       _root = old._root;
@@ -216,8 +222,62 @@ abstract class RenderNode extends Node {
   void _remove() {
     assert(_root != null);
     _root.remove();
+    _nodeMap.remove(_root);
     super._remove();
   }
+}
+
+Set<String> _registeredEvents = new HashSet<String>();
+
+void _dispatchEvent(sky.Event e) {
+  print('dispatch event: ${e.type}');
+  RenderNode target = RenderNode._getMounted(e.target);
+
+  // TODO(rafaelw): StopPropagation?
+  while (target != null) {
+    print ('target: ${target._key}');
+    if (target is EventTarget) {
+      target._handleEvent(e);
+    }
+
+    target = target._parent;
+  }
+}
+
+void _ensureDocListener(String eventType) {
+  if (_registeredEvents.add(eventType)) {
+    print('ensure $eventType');
+    sky.document.addEventListener(eventType, _dispatchEvent);
+  }
+}
+
+
+class Events extends Node implements EventTarget {
+  final Node content;
+  final Map<String, sky.EventListener> listeners;
+
+  Events(Node content, this.listeners): super(key: content._key);
+
+  void _sync(Node old, sky.ParentNode host, sky.Node insertBefore);
+
+  void _remove() {
+    super._remove();
+    content._remove();
+  }
+}
+
+typedef GestureEventHandler(sky.GestureEvent e);
+
+class GestureEvents extends Events {
+  GestureEvents(Node content, {
+    GestureEventHandler onTap
+  }) : super(content, {
+    'gesturetap': onTap
+  });
+}
+
+abstract class EventTarget {
+  void handleEvent(sky.Event e);
 }
 
 class Text extends RenderNode {
