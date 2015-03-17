@@ -117,8 +117,6 @@ abstract class Node {
     assert(!old._defunct);
     _root = old._root;
     _parent = old._parent;
-    // TODO(rafaelw): old._root = null;
-    // old._parent = null;
     return false;
   }
 
