@@ -1,0 +1,13 @@
+<script>
+import 'basic.dart';
+import 'dart:sky';
+import '../resources/dom_serializer.dart';
+import 'dart:sky.internals' as internals;
+
+void main() {
+  new TestApp();
+  window.requestAnimationFrame((_) {
+    internals.notifyTestComplete(serializeNode(document.lastChild));
+  });
+}
+</script>
