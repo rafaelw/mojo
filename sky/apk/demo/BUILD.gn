@@ -18,6 +18,8 @@ android_library("java") {
     "//base:base_java",
     "//mojo/public/java:bindings",
     "//mojo/public/java:system",
+    "//sky/services/contacts",
+    "//sky/services/contacts:interfaces_java",
     "//sky/services/keyboard",
     "//sky/services/keyboard:interfaces_java",
     "//sky/services/sensors",

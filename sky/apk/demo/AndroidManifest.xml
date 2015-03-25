@@ -9,6 +9,7 @@
     android:versionName="0.0.1">
 
     <uses-sdk android:minSdkVersion="14" android:targetSdkVersion="21" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="true" />
 
